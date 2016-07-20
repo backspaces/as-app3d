@@ -1,6 +1,6 @@
-System.register(['lib/DataSet.js', 'lib/util.js', 'node_modules/lzma/src/lzma_worker.js', 'node_modules/pako/dist/pako.js'], function (_export, _context) {
-  "use strict";
+'use strict';
 
+System.register(['lib/DataSet.js', 'lib/util.js', 'node_modules/lzma/src/lzma_worker.js', 'node_modules/pako/dist/pako.js'], function (_export, _context) {
   var DataSet, util, LZMA, pako;
   return {
     setters: [function (_libDataSetJs) {

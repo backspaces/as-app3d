@@ -20,16 +20,25 @@ class DataSet {
   // constructor: Stores the three DataSet components.
   // Checks data is right size, throws an error if not.
   constructor (width, height, data) {
-    if (data.length !== width * height)
+    if (data.length !== width * height) {
       u.error(`new DataSet length: ${data.length} !== ${width} * ${height}`)
-    else
-      [this.width, this.height, this.data] = [width, height, data]
+    } else {
+      this.width = width
+      this.height = height
+      this.data = data
+    }
   }
 
   // Checks x,y are within DataSet. Throw error if not.
   checkXY (x, y) {
-    if (!(u.between(x, 0, this.width - 1) && u.between(y, 0, this.height - 1)))
+    if (!this.inBounds(x, y))
       u.error(`DataSet.checkXY: x,y out of range: ${x}, ${y}`)
+  }
+
+  inBounds (x, y) {
+    if (!(u.between(x, 0, this.width - 1) && u.between(y, 0, this.height - 1)))
+      return false
+    return true
   }
 
   type () { return this.data.constructor }
@@ -65,17 +74,20 @@ class DataSet {
     // [bilinear sampling](http://en.wikipedia.org/wiki/Bilinear_interpolation)
     // The diagram shows the three lerps
     this.checkXY(x, y)
-    const [x0, y0] = [Math.floor(x), Math.floor(y)]
+    const x0 = Math.floor(x)
+    const y0 = Math.floor(y)
     const i = this.toIndex(x0, y0)
     const w = this.width
-    const [dx, dy] = [(x - x0), (y - y0)] // dx, dy = 0 if x, y on boundary
-    const [dx1, dy1] = [1 - dx, 1 - dy] // dx1, dy1 = 1 if x, y on boundary
+    const dx = (x - x0)
+    const dy = (y - y0)
+    const dx1 = 1 - dx
+    const dy1 = 1 - dy
     const f00 = this.data[i]
     // Edge case: fij is 0 if beyond data array; undefined -> 0.
     // This cancels the given component's factor in the result.
-    const f10 = this.data[i + 1] || 0 // 0 at bottom right corner
-    const f01 = this.data[i + w] || 0 // 0 at all bottom row
-    const f11 = this.data[i + 1 + w] || 0 // 0 at end of next to bottom row
+    var f10 = this.data[i + 1] || 0 // 0 at bottom right corner
+    var f01 = this.data[i + w] || 0 // 0 at all bottom row
+    var f11 = this.data[i + 1 + w] || 0 // 0 at end of next to bottom row
     // This is a bit involved but:
     // ```
     // If dx = 0; dx1 = 1, dy != 0
@@ -240,16 +252,17 @@ class DataSet {
   //
   // Use ds.convertType to convert to typed array
   convolve (kernel, factor = 1, crop = false) {
-    const [x0, y0, h, w] = crop
-      ? [1, 1, this.height - 1, this.width - 1]
-      : [0, 0, this.height, this.width]
+    const x0 = crop ? 1 : 0
+    const y0 = crop ? 1 : 0
+    const h = crop ? this.height - 1 : this.height
+    const w = crop ? this.width - 1 : this.width
     const Constructor = this.data.constructor
     const newDS = new DataSet(w, h, new Constructor(w * h))
-    for (let y = y0; y < h; y++) {
-      for (let x = x0; x < w; x++) {
-        const nei = this.neighborhood(x, y)
-        let sum2 = 0
-        for (let i2 = 0; i2 < kernel.length; i2++) {
+    for (var y = y0; y < h; y++) {
+      for (var x = x0; x < w; x++) {
+        var nei = this.neighborhood(x, y)
+        var sum2 = 0
+        for (var i2 = 0; i2 < kernel.length; i2++) {
           sum2 += kernel[i2] * nei[i2]
         }
         newDS.data[newDS.toIndex(x, y)] = sum2 * factor

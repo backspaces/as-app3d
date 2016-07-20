@@ -1,6 +1,6 @@
-System.register(['lib/OofA.js', 'lib/DataSet.js', 'lib/AgentSet.js', 'lib/Color.js', 'lib/ColorMap.js', 'lib/util.js'], function (_export, _context) {
-  "use strict";
+'use strict';
 
+System.register(['lib/OofA.js', 'lib/DataSet.js', 'lib/AgentSet.js', 'lib/Color.js', 'lib/ColorMap.js', 'lib/util.js'], function (_export, _context) {
   var OofA, DataSet, AgentSet, Color, ColorMap, util;
   return {
     setters: [function (_libOofAJs) {

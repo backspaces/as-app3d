@@ -1,6 +1,6 @@
-System.register(['lib/ColorMap.js', 'lib/Model.js', 'lib/Mouse.js', 'lib/util.js'], function (_export, _context) {
-  "use strict";
+'use strict';
 
+System.register(['lib/ColorMap.js', 'lib/Model.js', 'lib/Mouse.js', 'lib/util.js'], function (_export, _context) {
   var ColorMap, Model, Mouse, util;
   return {
     setters: [function (_libColorMapJs) {

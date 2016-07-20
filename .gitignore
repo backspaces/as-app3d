@@ -9,6 +9,8 @@ Attic/
 # The test page for es6-module-loader-dev.js & traceur.js
 # lib/test/
 
+lib/
+test/lib/
 node_modules/
 npm-debug.log
 .DS_Store

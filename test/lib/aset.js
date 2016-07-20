@@ -1,6 +1,6 @@
-System.register(['lib/Animator.js', 'lib/AgentSet.js', 'lib/Patch.js', 'lib/Patches.js', 'lib/Color.js', 'lib/ColorMap.js', 'lib/Model.js', 'lib/util.js'], function (_export, _context) {
-  "use strict";
+'use strict';
 
+System.register(['lib/Animator.js', 'lib/AgentSet.js', 'lib/Patch.js', 'lib/Patches.js', 'lib/Color.js', 'lib/ColorMap.js', 'lib/Model.js', 'lib/util.js'], function (_export, _context) {
   var Animator, AgentSet, patchProto, Patches, Color, ColorMap, Model, util;
   return {
     setters: [function (_libAnimatorJs) {

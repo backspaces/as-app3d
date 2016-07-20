@@ -1,6 +1,6 @@
-System.register(['lib/Color.js', 'lib/ColorMap.js', 'lib/util.js'], function (_export, _context) {
-  "use strict";
+'use strict';
 
+System.register(['lib/Color.js', 'lib/ColorMap.js', 'lib/util.js'], function (_export, _context) {
   var Color, ColorMap, util;
   return {
     setters: [function (_libColorJs) {

@@ -1,6 +1,6 @@
-System.register(['lib/util.js'], function (_export, _context) {
-  "use strict";
+'use strict';
 
+System.register(['lib/util.js'], function (_export, _context) {
   var util;
   return {
     setters: [function (_libUtilJs) {
