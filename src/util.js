@@ -501,29 +501,44 @@ const util = {
   getCanvasByID: (id) => document.getElementById(id),
   // Create a blank canvas of a given width/height
   createCanvas (width, height) {
-    const can = document.createElement('canvas')
+    let can
+    if (this.inWebWorker()) {
+      can = new OffscreenCanvas(width, height)
+    } else {
+      can = document.createElement('canvas')
+    }
     Object.assign(can, {width, height})
     return can
+  },
+  inWebWorker () {
+    return (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope)
   },
   // As above, but returing the context object.
   // NOTE: ctx.canvas is the canvas for the ctx, and can be use as an image.
   createCtx (width, height, ctxType = '2d') {
-    const can = this.createCanvas(width, height)
+    const can = this.createCanvas(width, height) // this.createCanvas(width, height)
     return can.getContext(ctxType === '2d' ? '2d' : 'webgl')
   },
   // Return the (complete) ImageData object for this context object
   ctxImageData (ctx) {
-    return ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
+    const canvas = ctx.canvas || ctx.offscreenCanvas
+    return ctx.getImageData(0, 0, canvas.width, canvas.height)
   },
   // Fill this context with the given image. Will scale image to fit ctx size.
   fillCtxWithImage (ctx, img) {
     this.setIdentity(ctx) // set/restore identity
-    ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height)
+    console.assert(img, 'img undefined')
+    const canvas = ctx.canvas || ctx.offscreenCanvas
+    if (img.transferToImageBitmap) img = img.transferToImageBitmap()
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
     ctx.restore()
   },
   // Return an image/png base64 [dataUrl](https://goo.gl/fyBPnL)
   // string for this ctx object.
-  ctxToDataUrl: (ctx) => ctx.canvas.toDataURL('image/png'),
+  ctxToDataUrl: (ctx) => {
+    const canvas = ctx.canvas || ctx.offscreenCanvas
+    canvas.toDataURL('image/png')
+  },
 
   // Convert a dataUrl back into am image.
   dataUrlToImage (dataUrl) { // async in some browsers?? http://goo.gl/kIk2U

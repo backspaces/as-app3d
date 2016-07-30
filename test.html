@@ -7,9 +7,37 @@
 <body>
   <script>
     var app = document.location.search.substring(1) || 'app'
-    app = `test/lib/${app}.js`
-    console.log('running', app)
-    System.import(app)
+    var loc
+    if (app.search('http:') >= 0 || app.search('https:') >= 0) {
+      loc = app
+    } else {
+      loc = `test/lib/${app}.js`
+    }
+    if (loc.search('.json') >= 0) {
+      console.log('probably firebase')
+      var oReq = new XMLHttpRequest()
+      oReq.addEventListener("load", function () {
+        var rt = this.responseText
+        if (this.responseText) {
+          System.import('test/lib/blank.js').then( function() {
+            console.log('ok going to eval this stuff')
+            var b = eval(rt)
+            try {
+              eval(b)
+            } catch(er) {
+              console.error(er)
+              alert('failed to evaluate script')
+            }
+          })
+        }
+      })
+      oReq.open("GET", loc)
+      oReq.send()
+    } else {
+      console.log('running', loc)
+      System.import(loc)
+    }
+
   </script>
   <div id='layers'> </div>
   <!-- <canvas id="can" width="300" height="200"></canvas> -->
