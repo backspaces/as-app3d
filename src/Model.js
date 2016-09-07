@@ -103,10 +103,13 @@ class Model {
     util.forEach(contexts, (val, key) => {
       if (val === null) return
       const ctx = util.createCtx(1, 1, val.ctx)
-      Object.assign(ctx.canvas.style, {
-        position: 'absolute', top: 0, left: 0, zIndex: val.z
-      })
-      this.div.appendChild(ctx.canvas)
+      const canvas = ctx.canvas || ctx.offscreenCanvas
+      if (canvas.style) {
+        Object.assign(canvas.style, {
+          position: 'absolute', top: 0, left: 0, zIndex: val.z
+        })
+        this.div.appendChild(canvas)
+      }
       contexts[key] = ctx
     })
     this.contexts = contexts
@@ -117,8 +120,9 @@ class Model {
     const { pxWidth: width, pxHeight: height } = this.world
     util.forEach(this.contexts, (ctx, key) => {
       if (ctx === null) return
-      Object.assign(ctx.canvas, { width, height })
-      Object.assign(ctx.canvas.style, { width, height })
+      const canvas = ctx.canvas || ctx.offscreenCanvas
+      Object.assign(canvas, { width, height })
+      if (canvas.style) Object.assign(canvas.style, { width, height })
       this.setFont(key)
       this.setCtxTransform(ctx)
       if (key === 'patches') util.setCtxSmoothing(ctx, false)
