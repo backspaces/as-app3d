@@ -1,6 +1,6 @@
 // Meshes used by the Three.js view module
 
-import THREE from '../dist/three.wrapper.js'
+import THREE from '/dist/three.wrapper.js'
 
 // Utility classes meant to be subclassed:
 

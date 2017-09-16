@@ -1,6 +1,6 @@
 {
-  "name": "asx",
-  "version": "v0.3.0",
+  "name": "asx-abm",
+  "version": "v0.3.1",
   "description": "AgentScript, 2nd Edition",
   "homepage": "http://backspaces.github.io/asx/",
   "main": "src/app.js",
@@ -13,7 +13,10 @@
   "keywords": [
     "netlogo",
     "3D",
-    "three.js"
+    "three.js",
+    "agentscript",
+    "agent-based",
+    "multi-agent"
   ],
   "libs": [
     "node_modules/three/build/three.min.js",
@@ -51,6 +54,7 @@
     "models/scripts"
   ],
   "scripts": {
+    "build-node": "node js/build",
     "clean": "rm -rf `bin/pkgkey.js mkdirs` && npm run mkdirs",
     "mkdirs": "mkdir -p `bin/pkgkey.js mkdirs`",
     "start": "node node_modules/serve/bin/serve.js -p 3000",
@@ -68,7 +72,9 @@
   },
   "devDependencies": {
     "butternut": "^0.4.6",
+    "graceful-fs": "^4.1.11",
     "rollup": "^0.41.6",
-    "sane": "^1.6.0"
+    "sane": "^1.6.0",
+    "shelljs": "^0.7.8"
   }
 }

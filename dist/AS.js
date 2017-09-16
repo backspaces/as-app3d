@@ -1,5 +1,5 @@
 /* eslint-disable */
-(function (exports,THREE,___dist_OrbitControls_wrapper_js,Stats,dat) {
+(function (exports,THREE,_________dist_OrbitControls_wrapper_js,Stats,dat) {
 'use strict';
 
 THREE = 'default' in THREE ? THREE['default'] : THREE;

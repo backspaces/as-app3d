@@ -1,8 +1,8 @@
 /* eslint-disable */
-import THREE from '../dist/three.wrapper.js';
-import '../dist/OrbitControls.wrapper.js';
-import Stats from '../dist/stats.wrapper.js';
-import dat from '../dist/dat.gui.wrapper.js';
+import THREE from '../../../dist/three.wrapper.js';
+import '../../../dist/OrbitControls.wrapper.js';
+import Stats from '../../../dist/stats.wrapper.js';
+import dat from '../../../dist/dat.gui.wrapper.js';
 
 // A set of useful misc utils which will eventually move to individual files.
 // Note we use arrow functions one-liners, more likely to be optimized.

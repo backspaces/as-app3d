@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const fs = require('fs')
-// const { exec, execSync } = require('child_process')
 const { exec } = require('child_process')
 
 const json = JSON.parse(fs.readFileSync('package.json'))
@@ -27,6 +26,6 @@ libs.forEach((lib) => {
     .replace('libs/', 'dist/')
 
   console.log('wraplibs:', fromPath, name, toPath)
-  // Run wraplib
-  exec(`bin/wraplib.js ${fromPath} ${name} > ${toPath}`)
+  // Run wraplib.
+  exec(`node bin/wraplib.js ${fromPath} ${name} > ${toPath}`)       //  TODO: wraplib vs wraplibplus?
 })

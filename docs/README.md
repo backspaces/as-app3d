@@ -5,11 +5,13 @@ This is a repository for the next version of the [AgentScript 1.0](http://agents
 ## Developer Information
 
 To clone a fresh repo, for PRs or your own local verson:
-* cd to where you want the asx/ dir to appear.
-* git clone https://github.com/backspaces/asx # create skeleton repo
-* cd asx # go to new repo
-* npm install # install all dev dependencies
-* npm run build # complete the install
+* install [node-gyp](https://github.com/nodejs/node-gyp)
+* `cd` to where you want the asx/ dir to appear.
+* `git clone` https://github.com/backspaces/asx # create skeleton repo
+* `cd asx` # go to new repo
+* `npm install` # install dev dependencies
+* `npm run build` # complete the install for non-Windows machines
+** `npm run build-node` # complete the install for Windows or other machines which fail on the prior command.
 * open `http://<path to asx>/models` to run a model. Check console for messages
 
 All workflow is npm run scripts.  See package.json's scripts, or simply run `npm run` for a list. [JavaScript Standard Style](https://standardjs.com/) is [used](https://github.com/backspaces/asx/blob/master/.eslintrc.json).
