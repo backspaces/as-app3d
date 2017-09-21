@@ -1,9 +1,9 @@
 {
   "name": "asx-abm",
-  "version": "v0.3.1",
+  "version": "v0.3.2",
   "description": "AgentScript, 2nd Edition",
   "homepage": "http://backspaces.github.io/asx/",
-  "main": "src/app.js",
+  "main": "dist/AS.js",
   "author": "Owen Densmore",
   "license": "GPL-3.0",
   "repository": {
