@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
+/*
+ *  Description:
+ *      This wrapper allows minification and other lib transformation.
+ *      it also caches lib module objects which are required / imported by scripts within /dist/AS
+ */
+
 const fs = require('fs')
 const args = process.argv
 const file = args[2]
-// name default for path/foo.min.js is foo
-const name = args[3] || file.replace(/.*\//, '').replace(/\..*/, '')
-// let name = args[3]
-// if (!name) {
-//   name = file.replace(/.*\//, '')
-//   name = name.replace(/\..*/, '')
-// }
+const name = args[3] || file.replace(/.*\//, '').replace(/\..*/, '')    // name default for path/foo.min.js is foo
 const style = args[4] || 'local' // local or global
 const setGlobal = style === 'global'
 const debug = true
@@ -27,7 +27,7 @@ const inWinMsg = // eslint-disable-line
   `wrapper: window.${name} exists; exporting it.`
 
 const code = fs.readFileSync(file)
-const wrapper = `// Programmatically created by wraplib.js
+const wrapper = `// Programmatically created by wraplibplus.js
 let result
 const win = window
 
@@ -44,13 +44,12 @@ if (window.${name}) {
 
   function wrap () {
 
-    returnVal =
-    ${code}
+    returnVal = ${code}
 
     if (typeof returnVal === "boolean") returnVal = undefined
-    if (!module.exports && Object.keys(exports).length > 0)
-      module.exports = exports
+    if (!module.exports && Object.keys(exports).length > 0) module.exports = exports
   }
+
   wrap.call(self)
   ${debugCode}
   result = self.${name} || window.${name} || module.exports || returnVal

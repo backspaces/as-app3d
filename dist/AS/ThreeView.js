@@ -2,10 +2,10 @@
 import util from './util.js'
 import Meshes from './ThreeMeshes'
 
-import THREE from '../dist/three.wrapper.js'
-import '../dist/OrbitControls.wrapper.js'
-import Stats from '../dist/stats.wrapper.js'
-import dat from '../dist/dat.gui.wrapper.js'
+import THREE from '/dist/three.wrapper.js'
+import '/dist/OrbitControls.wrapper.js'
+import Stats from '/dist/stats.wrapper.js'
+import dat from '/dist/dat.gui.wrapper.js'
 
 window.Meshes = Meshes // REMIND
 
