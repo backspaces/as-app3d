@@ -6,12 +6,15 @@
 //    https://developer.mozilla.org/en-US/docs/JavaScript/Timers)
 // * [Using timers & requestAnimationFrame together](http://goo.gl/ymEEX)
 
-class Animator {
+import Evented from './Evented.js'
+
+class Animator extends Evented {
   // Create initial animator for the model, specifying rate (fps) and
   // multiStep. Called by Model during initialization, use setRate to modify.
   // If multiStep, run the draw() and step() methods separately by
   // draw() using requestAnimationFrame and step() using setTimeout.
   constructor (model, rate = 60, multiStep = false) {
+    super()
     Object.assign(this, {model, rate, multiStep})
     this.reset()
   }
@@ -28,12 +31,14 @@ class Animator {
     this.resetTimes()
     this.stopped = false
     this.animate()
+    this.fire('start')
   }
   stop () {
     this.stopped = true
     if (this.animHandle) cancelAnimationFrame(this.animHandle)
     if (this.timeoutHandle) clearTimeout(this.timeoutHandle)
     this.animHandle = this.timeoutHandle = null
+    this.fire('stop')
   }
   // Internal utility: reset time instance variables
   resetTimes () {
@@ -44,7 +49,7 @@ class Animator {
   // Reset used by model.reset when resetting model.
   reset () { this.stop(); this.ticks = this.draws = 0 }
   // Two handlers used by animation loop
-  step () { this.ticks++; this.model.step() }
+  step () { this.ticks++; this.model.step(); this.fire('step') }
   draw () { this.draws++; this.model.draw() }
   // step and draw the model once
   once () { this.step(); this.draw() }
