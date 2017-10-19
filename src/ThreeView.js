@@ -1,6 +1,6 @@
 // import SpriteSheet from './SpriteSheet.js'
 import util from './util.js'
-import ThreeMeshes from './ThreeMeshes'
+import ThreeMeshes from './ThreeMeshes.js'
 
 import THREE from '../dist/three.wrapper.js'
 import '../dist/OrbitControls.wrapper.js'
