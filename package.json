@@ -40,13 +40,15 @@
     ]
   ],
   "docsfiles": [
-    "dist",
+    "README.md",
+    "src",
     "models",
-    "README.md"
+    "dist"
   ],
   "mkdirs": [
+    "src/core",
     "dist",
-    "dist/AS",
+    "docs/src",
     "docs/dist",
     "docs/models",
     "libs",
@@ -54,15 +56,15 @@
   ],
   "scripts": {
     "clean": "rm -rf `bin/pkgkey.js mkdirs` && mkdir `bin/pkgkey.js mkdirs`",
-    "start": "node node_modules/serve/bin/serve.js -p 3000",
-    "build": "npm run clean && npm run build-libs && npm run build-models && npm run build-dist && squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js && npm run build-docs && cp docs/README.md .",
+    "build": "npm run clean && npm run build-core && npm run build-libs && npm run build-dist && npm run minify && npm run build-docs",
     "build-libs": "cp `bin/pkgkey.js libs` libs && bin/wraplibs.js",
     "build-docs": "cp -Rp `bin/pkgkey.js docsfiles` docs",
-    "build-models": "bin/buildscripts.sh models/src",
-    "build-dist": "rollup -c && cp src/* dist/AS",
-    "watch": "sane 'npm run build-models' './models/src/' & sane 'npm run build-dist' './src/'"
+    "build-core": "cp node_modules/coreas/src/*js src/core",
+    "minify": "squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js",
+    "build-dist": "rollup -c"
   },
   "dependencies": {
+    "CoreAS": "backspaces/CoreAS",
     "dat.gui": "dataarts/dat.gui",
     "stats.js": "^0.17.0",
     "three": "latest"

@@ -27,7 +27,8 @@ const util = {
   // Is a number an integer (rather than a float w/ non-zero fractional part)
   isInteger: Number.isInteger || ((num) => Math.floor(num) === num),
   // Is obj a string?
-  isString: (obj) => typeof obj === 'string',
+  isString: (obj) => util.typeOf(obj) === 'string',
+  isObject: (obj) => util.typeOf(obj) === 'object',
   // Return array's type (Array or TypedArray variant)
   arrayType (array) { return array.constructor },
 
@@ -36,10 +37,6 @@ const util = {
     const d32 = new Uint32Array([0x01020304]);
     return (new Uint8ClampedArray(d32.buffer))[0] === 4
   },
-
-  // Throw an error with string.
-  // Use instead of `throw message` for better debugging
-  // error: (message) => { throw new Error(message) },
 
   // Identity fcn, returning its argument unchanged. Used in callbacks
   identity: (o) => o,
@@ -100,6 +97,13 @@ const util = {
   },
   warn (msg) {
     this.logOnce('Warning: ' + msg);
+  },
+  // Print a message to an html element
+  log (msg, element = document.body) {
+    element.style.fontFamily = 'monospace';
+    element.innerHTML += this.isObject(msg)
+      ? JSON.stringify(msg) + '<br />'
+      : msg + '<br />';
   },
 
   // Use chrome/ffox/ie console.time()/timeEnd() performance functions
@@ -534,15 +538,6 @@ const util = {
     ctx.save(); // NOTE: Does not change state, only saves current state.
     ctx.setTransform(1, 0, 0, 1, 0, 0); // or ctx.resetTransform()
   },
-  // Set ctx.canvas size, ctx scale, origin to the model's world.
-  setWorldTransform (ctx, world) {
-    ctx.canvas.width = world.width;
-    ctx.canvas.height = world.height;
-    ctx.save();
-    // ctx.scale(world.patchSize, -world.patchSize)
-    ctx.scale(1, -1);
-    ctx.translate(-world.minXcor, -world.maxYcor);
-  },
   // Set the text font, align and baseline drawing parameters.
   // Ctx can be either a canvas context or a DOM element
   // See [reference](http://goo.gl/AvEAq) for details.
@@ -609,8 +604,6 @@ class AgentArray extends Array {
     return this.reduce((prev, o) => prev + (reporter(o) ? 1 : 0), 0)
   }
 
-  // Replacements for array methods to avoid calling AgentArray ctor
-
   // Return shallow copy of a portion of this AgentArray
   // [See Array.slice](https://goo.gl/Ilgsok)
   // Default is to clone entire AgentArray
@@ -628,17 +621,6 @@ class AgentArray extends Array {
     return this
   }
 
-  // Remove/Insert object "o" from this array. If prop given, assume
-  // array sorted by prop and use binary search. Return this for chaining.
-  // REMIND: Move util functions here, hopefully simplifying.
-  // remove (o, prop) {
-  //   this.removeItem(o, prop)
-  //   return this
-  // }
-  // insert (o, prop) {
-  //   this.insertItem(o, prop)
-  //   return this
-  // }
   // Remove an item from an array. Binary search if f given
   // Array unchanged if item not found.
   remove (o, f) {
@@ -782,6 +764,248 @@ class AgentArray extends Array {
       }
     });
     return agents
+  }
+}
+
+// AgentSets are arrays that are factories for their own agents/objects.
+// They are the base for Patches, Turtles and Links.
+
+// Vocab: AgentSets are NetLogo collections: Patches, Turtles, and Links.
+// Agent is an object in an AgentSet: Patch, Turtle, Link.
+
+class AgentSet extends AgentArray {
+  // Magic to return AgentArray's rather than AgentSets
+  // Symbol.species: https://goo.gl/Zsxwxd
+  static get [Symbol.species] () { return AgentArray }
+
+  // Create an empty `AgentSet` and initialize the `ID` counter for add().
+  // If baseSet is supplied, the new agentset is a subarray of baseSet.
+  // This sub-array feature is how breeds are managed, see class `Model`
+  constructor (model, AgentClass, name, baseSet = null) {
+    super(); // create empty AgentArray
+    baseSet = baseSet || this; // if not a breed, set baseSet to this
+    // AgentSets know their model, name, baseSet, world.
+    // Object.assign(this, {model, name, baseSet, AgentClass, world: model.world})
+    Object.assign(this, {model, name, baseSet, AgentClass});
+    // BaseSets know their breeds and keep the ID global
+    if (this.isBaseSet()) {
+      this.breeds = {}; // will contain breedname: breed entries
+      this.ID = 0;
+    // Breeds add themselves to baseSet.
+    } else {
+      this.baseSet.breeds[name] = this;
+    }
+    // Keep a list of this set's variables; see `own` below
+    this.ownVariables = [];
+    // Create a proto for our agents by having a defaults and instance layer
+    // this.AgentClass = AgentClass
+    this.agentProto = new AgentClass(this);
+    this.protoMixin(this.agentProto, AgentClass);
+    // }
+  }
+  // All agents have:
+  // vars: id, agentSet, model, world, breed (getter)
+  //   baseSet by name: turtles/patches/links
+  // methods: setBreed, getBreed, isBreed
+  // getter/setter: breed
+  protoMixin (agentProto, AgentClass) {
+    Object.assign(agentProto, {
+      agentSet: this,
+      model: this.model
+      // world: this.world
+    });
+    agentProto[this.baseSet.name] = this.baseSet;
+
+    // if (this.isBaseSet()) {
+    // Model.reset should not redefine these.
+    if (!AgentClass.prototype.setBreed) {
+      Object.assign(AgentClass.prototype, {
+        setBreed (breed) { breed.setBreed(this); },
+        getBreed () { return this.agentSet },
+        isBreed (breed) { return this.agentSet === breed }
+      });
+      Object.defineProperty(AgentClass.prototype, 'breed', {
+        get: function () { return this.agentSet }
+      });
+    }
+  }
+
+  // Create a subarray of this AgentSet. Example: create a people breed of turtles:
+  // `people = turtles.newBreed('people')`
+  newBreed (name) {
+    return new AgentSet(this.model, this.AgentClass, name, this)
+  }
+
+  // Is this a baseSet or a derived "breed"
+  isBreedSet () { return this.baseSet !== this }
+  isBaseSet () { return this.baseSet === this }
+
+  // Return breeds in a subset of an AgentSet.
+  // Ex: patches.inRect(5).withBreed(houses)
+  withBreed (breed) {
+    return this.with(a => a.agentSet === breed)
+  }
+
+  // Abstract method used by subclasses to create and add their instances.
+  create () { console.log(`AgentSet: Abstract method called: ${this}`); }
+
+  // Add an agent to the list.  Only used by agentset factory methods. Adds
+  // the `id` property to all agents. Increment `ID`.
+  // Returns the object for chaining. The set will be sorted by `id`.
+  addAgent (o) { // o only for breeds adding themselves to their baseSet
+    o = o || Object.create(this.agentProto); // REMIND: Simplify! Too slick.
+    if (this.isBreedSet())
+      this.baseSet.addAgent(o);
+    else
+      o.id = this.ID++;
+    this.push(o);
+    return o
+  }
+  clear () { while (this.any()) this.last().die(); } // die() is an agent method
+  // Remove an agent from the agentset, returning the agentset for chaining.
+  // Note removeAgent(agent) different than remove(agent) which simply removes
+  // the agent from it's array
+  removeAgent (o) {
+    // Remove me from my baseSet
+    if (this.isBreedSet()) this.baseSet.remove(o, 'id');
+    // Remove me from my set.
+    this.remove(o, 'id');
+    return this
+  }
+
+  // AgentSets often need a random color. We use a standard shared ColorMap map.
+  // randomColor () { return ColorMap.Basic16.randomColor() }
+
+  // Get/Set default values for this agentset's agents.
+  setDefault (name, value) {
+    this.agentProto[name] = value;
+  }
+  getDefault (name) { return this.agentProto[name] }
+  // Used when getter/setter's need to know if get/set default
+  settingDefault (agent) { return agent.id == null }
+
+  // Declare variables of an agent class. May deprecate if not needed.
+  // `varnames` is a string of space separated names
+  own (varnames) {
+    // if (this.isBreedSet())
+    //   this.ownVariables = util.clone(this.baseSet.ownVariables)
+    for (const name of varnames.split(' ')) {
+      this.setDefault(name, null);
+      this.ownVariables.push(name);
+    }
+  }
+
+  // Move an agent from its AgentSet/breed to be in this AgentSet/breed.
+  setBreed (a) { // change agent a to be in this breed
+    // Return if `a` is already of my breed
+    if (a.agentSet === this) return
+    // Remove/insert breeds (not baseSets) from their agentsets
+    if (a.agentSet.isBreedSet()) a.agentSet.remove(a, 'id');
+    if (this.isBreedSet()) this.insert(a, 'id');
+
+    // Make list of `a`'s vars and my ownvars.
+    const avars = a.agentSet.ownVariables;
+    // First remove `a`'s vars not in my ownVariables
+    for (const avar of avars)
+      if (!this.ownVariables.includes(avar))
+        delete a[avar];
+    // Now add ownVariables to `a`'s vars, default to 0.
+    // If ownvar already in avars, it is not modified.
+    for (const ownvar of this.ownVariables)
+      if (!avars.includes(ownvar))
+        a[ownvar] = 0; // NOTE: NL uses 0, maybe we should use null?
+
+    // Give `a` my defaults/statics
+    return Object.setPrototypeOf(a, this.agentProto)
+  }
+}
+
+// The Animator runs the Model's step() and draw() methods.
+
+// Because not all models have the same animator requirements, we build a class
+// for customization by the programmer.  See these URLs for more info:
+// * [JavaScript timers docs](
+//    https://developer.mozilla.org/en-US/docs/JavaScript/Timers)
+// * [Using timers & requestAnimationFrame together](http://goo.gl/ymEEX)
+
+class Animator {
+  // Create initial animator for the model, specifying rate (fps) and
+  // multiStep. Called by Model during initialization, use setRate to modify.
+  // If multiStep, run the draw() and step() methods separately by
+  // draw() using requestAnimationFrame and step() using setTimeout.
+  constructor (model, rate = 60, multiStep = false) {
+    Object.assign(this, {model, rate, multiStep});
+    this.reset();
+  }
+  // Adjust animator. Call before model.start()
+  // in setup() to change default settings
+  setRate (rate, multiStep = false) {
+    Object.assign(this, {rate, multiStep});
+    this.resetTimes();
+  }
+  // start/stop model, called by Model.
+  // Often used for debugging and resetting model.
+  start () {
+    if (!this.stopped) return // avoid multiple starts
+    this.resetTimes();
+    this.stopped = false;
+    this.animate();
+  }
+  stop () {
+    this.stopped = true;
+    if (this.animHandle) cancelAnimationFrame(this.animHandle);
+    if (this.timeoutHandle) clearTimeout(this.timeoutHandle);
+    this.animHandle = this.timeoutHandle = null;
+  }
+  // Internal utility: reset time instance variables
+  resetTimes () {
+    this.startMS = this.now();
+    this.startTick = this.ticks;
+    this.startDraw = this.draws;
+  }
+  // Reset used by model.reset when resetting model.
+  reset () { this.stop(); this.ticks = this.draws = 0; }
+  // Two handlers used by animation loop
+  step () { this.ticks++; this.model.step(); }
+  draw () { this.draws++; this.model.draw(); }
+  // step and draw the model once
+  once () { this.step(); this.draw(); }
+  // Get current time, with high resolution timer if available
+  now () { return performance.now() }
+  // Time in ms since starting animator
+  ms () { return this.now() - this.startMS }
+  // Get ticks/draws per second. They will differ if multiStep.
+  ticksPerSec () {
+    const dt = this.ticks - this.startTick;
+    return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms()) // avoid divide by 0
+  }
+  drawsPerSec () {
+    const dt = this.draws - this.startDraw;
+    return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms())
+  }
+  // Return a status string for debugging and logging performance
+  toString () {
+    return `ticks: ${this.ticks}, draws: ${this.draws}, rate: ${this.rate} tps/dps: ${this.ticksPerSec()}/${this.drawsPerSec()}`
+  }
+  // Animation via setTimeout and requestAnimationFrame.
+  // Arrow functions are required for callbacks for lexical scope.
+  animateSteps () {
+    this.step();
+    if (!this.stopped)
+      this.timeoutHandle = setTimeout(() => this.animateSteps(), 10);
+  }
+  animateDraws () {
+    if (this.drawsPerSec() < this.rate) { // throttle drawing to @rate
+      if (!this.multiStep) this.step();
+      this.draw();
+    }
+    if (!this.stopped)
+      this.animHandle = requestAnimationFrame(() => this.animateDraws());
+  }
+  // Called once by start() to get animateSteps & animateDraws iterating.
+  animate () {
+    if (this.multiStep) this.animateSteps();
+    this.animateDraws();
   }
 }
 
@@ -1285,254 +1509,6 @@ const ColorMap = {
   }
 };
 
-// AgentSets are arrays that are factories for their own agents/objects.
-// They are the base for Patches, Turtles and Links.
-
-// Vocab: AgentSets are NetLogo collections: Patches, Turtles, and Links.
-// Agent is an object in an AgentSet: Patch, Turtle, Link.
-
-class AgentSet extends AgentArray {
-  // Magic to return AgentArray's rather than AgentSets
-  // Symbol.species: https://goo.gl/Zsxwxd
-  static get [Symbol.species] () { return AgentArray }
-
-  // Create an empty `AgentSet` and initialize the `ID` counter for add().
-  // If baseSet is supplied, the new agentset is a subarray of baseSet.
-  // This sub-array feature is how breeds are managed, see class `Model`
-  constructor (model, AgentClass, name, baseSet = null) {
-    super(); // create empty AgentArray
-    baseSet = baseSet || this; // if not a breed, set baseSet to this
-    // AgentSets know their model, name, baseSet, world.
-    // Object.assign(this, {model, name, baseSet, AgentClass, world: model.world})
-    Object.assign(this, {model, name, baseSet, AgentClass});
-    // BaseSets know their breeds and keep the ID global
-    if (this.isBaseSet()) {
-      this.breeds = {}; // will contain breedname: breed entries
-      this.ID = 0;
-    // Breeds add themselves to baseSet.
-    } else {
-      this.baseSet.breeds[name] = this;
-    }
-    // Keep a list of this set's variables; see `own` below
-    this.ownVariables = [];
-    // Create a proto for our agents by having a defaults and instance layer
-    // this.AgentClass = AgentClass
-    this.agentProto = new AgentClass(this);
-    this.protoMixin(this.agentProto, AgentClass);
-    // }
-  }
-  // All agents have:
-  // vars: id, agentSet, model, world, breed (getter)
-  //   baseSet by name: turtles/patches/links
-  // methods: setBreed, getBreed, isBreed
-  // getter/setter: breed
-  protoMixin (agentProto, AgentClass) {
-    Object.assign(agentProto, {
-      agentSet: this,
-      model: this.model
-      // world: this.world
-    });
-    agentProto[this.baseSet.name] = this.baseSet;
-
-    // if (this.isBaseSet()) {
-    // Model.reset should not redefine these.
-    if (!AgentClass.prototype.setBreed) {
-      Object.assign(AgentClass.prototype, {
-        setBreed (breed) { breed.setBreed(this); },
-        getBreed () { return this.agentSet },
-        isBreed (breed) { return this.agentSet === breed }
-      });
-      Object.defineProperty(AgentClass.prototype, 'breed', {
-        get: function () { return this.agentSet }
-      });
-    }
-  }
-
-  // Create a subarray of this AgentSet. Example: create a people breed of turtles:
-  // `people = turtles.newBreed('people')`
-  newBreed (name) {
-    return new AgentSet(this.model, this.AgentClass, name, this)
-  }
-
-  // Is this a baseSet or a derived "breed"
-  isBreedSet () { return this.baseSet !== this }
-  isBaseSet () { return this.baseSet === this }
-
-  // with (reporter) { return this.filter(reporter) }
-  // if (this.isBreedSet()) array = array.filter((a) => a.agentSet === this)
-
-  // Return breeds in a subset of an AgentSet.
-  // Ex: patches.inRect(5).withBreed(houses)
-  withBreed (breed) {
-    return this.with(a => a.agentSet === breed)
-  }
-
-  // Abstract method used by subclasses to create and add their instances.
-  create () { console.log(`AgentSet: Abstract method called: ${this}`); }
-
-  // Add an agent to the list.  Only used by agentset factory methods. Adds
-  // the `id` property to all agents. Increment `ID`.
-  // Returns the object for chaining. The set will be sorted by `id`.
-  addAgent (o) { // o only for breeds adding themselves to their baseSet
-    o = o || Object.create(this.agentProto); // REMIND: Simplify! Too slick.
-    if (this.isBreedSet())
-      this.baseSet.addAgent(o);
-    else
-      o.id = this.ID++;
-    this.push(o);
-    return o
-  }
-  clear () { while (this.any()) this.last().die(); } // die() is an agent method
-  // Remove an agent from the agentset, returning the agentset for chaining.
-  // Note removeAgent(agent) different than remove(agent) which simply removes
-  // the agent from it's array
-  removeAgent (o) {
-    // Remove me from my baseSet
-    if (this.isBreedSet()) this.baseSet.remove(o, 'id');
-    // Remove me from my set.
-    this.remove(o, 'id');
-    return this
-  }
-
-  // AgentSets often need a random color. We use a standard shared ColorMap map.
-  randomColor () { return ColorMap.Basic16.randomColor() }
-
-  // Get/Set default values for this agentset's agents.
-  // If name ends with "color", use value = toColor(value)
-  setDefault (name, value) {
-    if (name.match(/color$/i))
-      value = Color.toColor(value);
-    this.agentProto[name] = value;
-  }
-  getDefault (name) { return this.agentProto[name] }
-  // Used when getter/setter's need to know if get/set default
-  settingDefault (agent) { return agent.id == null }
-
-  // Declare variables of an agent class.
-  // `varnames` is a string of space separated names
-  own (varnames) {
-    // if (this.isBreedSet())
-    //   this.ownVariables = util.clone(this.baseSet.ownVariables)
-    for (const name of varnames.split(' ')) {
-      this.setDefault(name, null);
-      this.ownVariables.push(name);
-    }
-  }
-
-  // Move an agent from its AgentSet/breed to be in this AgentSet/breed.
-  setBreed (a) { // change agent a to be in this breed
-    // Return if `a` is already of my breed
-    if (a.agentSet === this) return
-    // Remove/insert breeds (not baseSets) from their agentsets
-    if (a.agentSet.isBreedSet()) a.agentSet.remove(a, 'id');
-    if (this.isBreedSet()) this.insert(a, 'id');
-
-    // Make list of `a`'s vars and my ownvars.
-    const avars = a.agentSet.ownVariables;
-    // First remove `a`'s vars not in my ownVariables
-    for (const avar of avars)
-      if (!this.ownVariables.includes(avar))
-        delete a[avar];
-    // Now add ownVariables to `a`'s vars, default to 0.
-    // If ownvar already in avars, it is not modified.
-    for (const ownvar of this.ownVariables)
-      if (!avars.includes(ownvar))
-        a[ownvar] = 0; // NOTE: NL uses 0, maybe we should use null?
-
-    // Give `a` my defaults/statics
-    return Object.setPrototypeOf(a, this.agentProto)
-  }
-}
-
-// The Animator runs the Model's step() and draw() methods.
-
-// Because not all models have the same animator requirements, we build a class
-// for customization by the programmer.  See these URLs for more info:
-// * [JavaScript timers docs](
-//    https://developer.mozilla.org/en-US/docs/JavaScript/Timers)
-// * [Using timers & requestAnimationFrame together](http://goo.gl/ymEEX)
-
-class Animator {
-  // Create initial animator for the model, specifying rate (fps) and
-  // multiStep. Called by Model during initialization, use setRate to modify.
-  // If multiStep, run the draw() and step() methods separately by
-  // draw() using requestAnimationFrame and step() using setTimeout.
-  constructor (model, rate = 60, multiStep = false) {
-    Object.assign(this, {model, rate, multiStep});
-    this.reset();
-  }
-  // Adjust animator. Call before model.start()
-  // in setup() to change default settings
-  setRate (rate, multiStep = false) {
-    Object.assign(this, {rate, multiStep});
-    this.resetTimes();
-  }
-  // start/stop model, called by Model.
-  // Often used for debugging and resetting model.
-  start () {
-    if (!this.stopped) return // avoid multiple starts
-    this.resetTimes();
-    this.stopped = false;
-    this.animate();
-  }
-  stop () {
-    this.stopped = true;
-    if (this.animHandle) cancelAnimationFrame(this.animHandle);
-    if (this.timeoutHandle) clearTimeout(this.timeoutHandle);
-    this.animHandle = this.timeoutHandle = null;
-  }
-  // Internal utility: reset time instance variables
-  resetTimes () {
-    this.startMS = this.now();
-    this.startTick = this.ticks;
-    this.startDraw = this.draws;
-  }
-  // Reset used by model.reset when resetting model.
-  reset () { this.stop(); this.ticks = this.draws = 0; }
-  // Two handlers used by animation loop
-  step () { this.ticks++; this.model.step(); }
-  draw () { this.draws++; this.model.draw(); }
-  // step and draw the model once
-  once () { this.step(); this.draw(); }
-  // Get current time, with high resolution timer if available
-  now () { return performance.now() }
-  // Time in ms since starting animator
-  ms () { return this.now() - this.startMS }
-  // Get ticks/draws per second. They will differ if multiStep.
-  ticksPerSec () {
-    const dt = this.ticks - this.startTick;
-    return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms()) // avoid divide by 0
-  }
-  drawsPerSec () {
-    const dt = this.draws - this.startDraw;
-    return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms())
-  }
-  // Return a status string for debugging and logging performance
-  toString () {
-    return `ticks: ${this.ticks}, draws: ${this.draws}, rate: ${this.rate} tps/dps: ${this.ticksPerSec()}/${this.drawsPerSec()}`
-  }
-  // Animation via setTimeout and requestAnimationFrame.
-  // Arrow functions are required for callbacks for lexical scope.
-  animateSteps () {
-    this.step();
-    if (!this.stopped)
-      this.timeoutHandle = setTimeout(() => this.animateSteps(), 10);
-  }
-  animateDraws () {
-    if (this.drawsPerSec() < this.rate) { // throttle drawing to @rate
-      if (!this.multiStep) this.step();
-      this.draw();
-    }
-    if (!this.stopped)
-      this.animHandle = requestAnimationFrame(() => this.animateDraws());
-  }
-  // Called once by start() to get animateSteps & animateDraws iterating.
-  animate () {
-    if (this.multiStep) this.animateSteps();
-    this.animateDraws();
-  }
-}
-
 // A **DataSet** is an object with width/height and an array
 // whose length = width * height
 //
@@ -1619,8 +1595,6 @@ class DataSet {
     const y0 = Math.floor(y);
     const i = this.toIndex(x0, y0);
     const w = this.width;
-    // const [dx, dy] = [(x - x0), (y - y0)] // dx, dy = 0 if x, y on boundary. commented out for speed
-    // const [dx1, dy1] = [1 - dx, 1 - dy] // dx1, dy1 = 1 if x, y on boundary
     const dx = x - x0;
     const dy = y - y0;
     const dx1 = 1 - dx;
@@ -1921,15 +1895,9 @@ class DataSet {
 
   // Return max/min of data
   max () {
-    // return this.data.reduce(function (a, b) {
-    //   return Math.max(a, b)
-    // })
     return util.arrayMax(this.data)
   }
   min () {
-    // return this.data.reduce(function (a, b) {
-    //   return Math.min(a, b)
-    // })
     return util.arrayMin(this.data)
   }
   // Test that this has same width, height, data as dataset.
@@ -1940,109 +1908,6 @@ class DataSet {
       util.arraysEqual(this.data, dataset.data)
   }
 }
-
-// An .asc GIS file: a text file with a header:
-//
-//     ncols 195
-//     nrows 195
-//     xllcorner -84.355652
-//     yllcorner 39.177963
-//     cellsize 0.000093
-//     NODATA_value -9999
-//
-// ..followed by a ncols X nrows matrix of numbers
-
-class AscDataSet extends DataSet {
-  constructor (ascString, Type = Array, options = {}) {
-    const textData = ascString.split('\n');
-    const header = {};
-    util.repeat(6, (i) => {
-      const keyVal = textData[i].split(/\s+/);
-      header[keyVal[0].toLowerCase()] = parseFloat(keyVal[1]);
-    });
-    const data = [];
-    util.repeat(header.nrows, (i) => {
-      const nums = textData[6 + i].trim().split(' ');
-      for (const num of nums)
-        data.push(parseFloat(num));
-    });
-    super(header.ncols, header.nrows, util.convertArray(data, Type));
-    this.header = header;
-    Object.assign(this, options);
-  }
-}
-
-// Export/Import DataSets
-// import DataSet from './DataSet.js'
-// Private utility functions:
-
-// Create a legal dataset JSON object, defaulting to base64 data string.
-// This is the object that JSON.stringify will use for IO
-function jsonObject (dataset, useBase64, meta) {
-  return {
-    width: dataset.width,
-    height: dataset.height,
-    data: arrayToString(dataset.data, useBase64),
-    dataType: dataset.dataType().name,
-    meta: meta
-  }
-}
-// Convert an array, Typed or JS, to a string for dataset's data array
-function arrayToString (array, useBase64) {
-  if (useBase64) {
-    const data = util.arrayToBuffer(array);
-    return util.bufferToBase64(data)
-  }
-  return JSON.stringify(util.convertArray(array, Array))
-}
-// Convert a string, base64 or JSON, to an array of the given Type
-function stringToArray (string, dataTypeName) {
-  const dataType = window[dataTypeName];
-  if (isBase64(string)) {
-    const uint8array = util.base64ToBuffer(string);
-    return util.bufferToArray(uint8array, dataType)
-  }
-  return util.convertArray(JSON.parse(string), dataType)
-}
-function isBase64 (arrayString) {
-  // Base64 does not allow '[', only A-Z, a-z, 0-9, +, /
-  // https://en.wikipedia.org/wiki/Base64
-  return arrayString[0] !== '['
-}
-
-const DataSetIO = {
-  // JSON import/export. The JSON returned looks like:
-  // ```
-  // {
-  //   width: dataset.width,
-  //   height: dataset.height,
-  //   data: string, // json or base64 string of DataSet array
-  //   dataType: string, // name of data array type: TypedArray or Array
-  //   type: string, // dataset class name
-  // }
-  // ```
-
-  // Create JSON string from DataSet, see jsonObject above
-  dataSetToJson (dataset, useBase64 = true, meta = {}) {
-    const obj = jsonObject(dataset, useBase64, meta);
-    return JSON.stringify(obj)
-  },
-
-  // Convert the jsonObject string to a basic dataset: width, height, data.
-  // The data array will be the same type as the original dataset.
-  jsonToDataSet (jsonString) {
-    const jsonObj = JSON.parse(jsonString);
-    const data = stringToArray(jsonObj.data, jsonObj.dataType);
-    return new DataSet(jsonObj.width, jsonObj.height, data)
-  },
-
-  // IndexedDB uses the [Structured Clone Algorithm](https://goo.gl/x8H9HK).
-  // DataSets can be directly stored and retrieved, they satisfy
-  // the SCA requirements.
-  toIndexedDB (dataset) {
-    return dataset // place holder for IDB sugar if needed
-  }
-};
 
 // Flyweight object creation, see Patch/Patches.
 
@@ -2146,7 +2011,7 @@ class Links extends AgentSet {
       const link = this.addAgent();
       link.init(from, t);
       initFcn(link);
-      if (!link.color) link.color = this.randomColor();
+      if (!link.color) link.color = this.model.randomColor();
       return link
     }) // REMIND: return single link if to not an array?
   }
@@ -2157,13 +2022,12 @@ class Links extends AgentSet {
 // transforms like GIS and DataSets.
 
 class World {
-  static defaultOptions (size = 13, max = 16) {
+  static defaultOptions (maxX = 16, maxY = maxX) {
     return {
-      patchSize: size,
-      minX: -max,
-      maxX: max,
-      minY: -max,
-      maxY: max
+      minX: -maxX,
+      maxX: maxX,
+      minY: -maxY,
+      maxY: maxY
     }
   }
   // Initialize the world w/ defaults overridden w/ options.
@@ -2172,12 +2036,12 @@ class World {
     Object.assign(this, options); // override defaults with options
     this.setWorld();
   }
-  // Complete properties derived from patchSize, minX/Y, maxX/Y
+  // Complete properties derived from minX/Y, maxX/Y (patchSize === 1)
   setWorld () {
     this.numX = this.maxX - this.minX + 1;
     this.numY = this.maxY - this.minY + 1;
-    this.width = this.numX * this.patchSize;
-    this.height = this.numY * this.patchSize;
+    this.width = this.numX; // REMIND: remove?
+    this.height = this.numY;
     this.minXcor = this.minX - 0.5;
     this.maxXcor = this.maxX + 0.5;
     this.minYcor = this.minY - 0.5;
@@ -2185,16 +2049,19 @@ class World {
     this.centerX = (this.minX + this.maxX) / 2;
     this.centerY = (this.minY + this.maxY) / 2;
   }
+  // Test x,y for being on-world.
   isOnWorld (x, y) {
     return (this.minXcor <= x) && (x <= this.maxXcor) &&
            (this.minYcor <= y) && (y <= this.maxYcor)
   }
-  setCtxTransform (ctx) {
-    ctx.canvas.width = this.width;
-    ctx.canvas.height = this.height;
+  // Convert a canvas to world coordinates.
+  // The size is determined by patchSize.
+  setCtxTransform (ctx, patchSize) {
+    ctx.canvas.width = this.width * patchSize;
+    ctx.canvas.height = this.height * patchSize;
     ctx.save();
-    ctx.scale(this.patchSize, -this.patchSize);
-    ctx.translate(-(this.minXcor), -(this.maxYcor));
+    ctx.scale(patchSize, -patchSize);
+    ctx.translate(-(this.minXcor * patchSize), -(this.maxYcor * patchSize));
   }
 }
 
@@ -2250,15 +2117,15 @@ class Patches extends AgentSet {
   // Get/Set label. REMIND: not implemented.
   // Set removes label if label is null or undefined.
   // Get returns undefined if no label.
-  setLabel (patch, label) { // REMIND: does this work for breeds?
-    if (label == null) // null or undefined
-      delete this.labels[patch.id];
-    else
-      this.labels[patch.id] = label;
-  }
-  getLabel (patch) {
-    return this.labels[patch.id]
-  }
+  // setLabel (patch, label) { // REMIND: does this work for breeds?
+  //   if (label == null) // null or undefined
+  //     delete this.labels[patch.id]
+  //   else
+  //     this.labels[patch.id] = label
+  // }
+  // getLabel (patch) {
+  //   return this.labels[patch.id]
+  // }
 
   // Return the offsets from a patch for its 8 element neighbors.
   // Specialized to be faster than inRect below.
@@ -2648,14 +2515,14 @@ class Patch {
   set color (color) { this.setColor(color); }
 
   // Set label. Erase label via setting to undefined.
-  setLabel (label) {
-    this.patches.setLabel(this, label);
-  }
-  getLabel () {
-    this.patches.getLabel(this);
-  }
-  get label () { return this.getLabel() }
-  set label (label) { return this.setLabel(label) }
+  // setLabel (label) {
+  //   this.patches.setLabel(this, label)
+  // }
+  // getLabel () {
+  //   this.patches.getLabel(this)
+  // }
+  // get label () { return this.getLabel() }
+  // set label (label) { return this.setLabel(label) }
 
   // Promote this.turtles on first call to turtlesHere.
   turtlesHere () {
@@ -2749,8 +2616,11 @@ class Turtles extends AgentSet {
       const turtle = this.addAgent();
       turtle.theta = util.randomFloat(Math.PI * 2);
       if (this.renderer.useSprites) // fake sprite for initialization
-        turtle.sprite =
-          {shape: turtle.shapeFcn, color: this.randomColor(), needsUpdate: true};
+        turtle.sprite = {
+          shape: turtle.shapeFcn,
+          color: this.model.randomColor(),
+          needsUpdate: true
+        };
       initFcn(turtle);
       a.push(turtle); // Return array of new agents. REMIND: should be agentarray?
     })
@@ -2914,7 +2784,8 @@ class Turtle {
   setSprite (shape = this.shape, color = this.color, strokeColor = this.strokeColor) {
     if (shape.sheet) { this.sprite = shape; return } // src is a sprite
     const ss = this.model.spriteSheet;
-    color = color || this.turtles.randomColor();
+    // color = color || this.turtles.randomColor()
+    color = color || this.model.randomColor();
     this.sprite = ss.newSprite(shape, color, strokeColor);
   }
   setSize (size) { this.size = size; } // * this.model.world.patchSize }
@@ -3442,7 +3313,9 @@ class CanvasMesh extends BaseMesh {
     if (this.mesh) this.dispose();
     const {textureOptions, z} = this.options;
     Object.assign(this, { canvas, z, textureOptions });
-    const {width, height, numX, numY, centerX, centerY, patchSize} = this.model.world;
+    // const {width, height, numX, numY, centerX, centerY, patchSize} = this.model.world
+    const {width, height, numX, numY, centerX, centerY} = this.model.world;
+    const patchSize = 1; // REMIND
 
     const texture = new THREE.CanvasTexture(canvas);
     for (const key in textureOptions) {
@@ -3533,7 +3406,8 @@ class QuadSpritesMesh extends BaseMesh {
   update (turtles) {
     const mesh = this.mesh;
     const { vertices, indices } = this.unitQuad;
-    const patchSize = this.model.world.patchSize;
+    // const patchSize = this.model.world.patchSize
+    const patchSize = 1; // REMIND
     const positionAttrib = mesh.geometry.getAttribute('position');
     const uvAttrib = mesh.geometry.getAttribute('uv');
     const indexAttrib = mesh.geometry.getIndex();
@@ -3583,7 +3457,8 @@ class PointsMesh extends BaseMesh {
   }
   init () {
     if (this.mesh) this.dispose();
-    const pointSize = this.options.pointSize * this.model.world.patchSize;
+    // const pointSize = this.options.pointSize * this.model.world.patchSize
+    const pointSize = this.options.pointSize; // REMIND
     const color = this.options.color ? new THREE.Color(...this.options.color) : null;
 
     const geometry = new THREE.BufferGeometry();
@@ -3610,7 +3485,8 @@ class PointsMesh extends BaseMesh {
     const colorAttrib = this.mesh.geometry.getAttribute('color');
     const vertices = [];
     const colors = colorAttrib == null ? null : [];
-    const patchSize = this.model.world.patchSize;
+    // const patchSize = this.model.world.patchSize
+    const patchSize = 1; // REMIND
 
     // const red = [1, 0, 0] // REMIND: add color/shape to turtles
 
@@ -3669,7 +3545,8 @@ class LinksMesh extends BaseMesh {
       const {end0, end1, color} = links[i];
       const {x: x0, y: y0, z: z0} = end0;
       const {x: x1, y: y1, z: z1} = end1;
-      const ps = this.model.world.patchSize;
+      // const ps = this.model.world.patchSize
+      const ps = 1; // REMIND
       vertices.push(x0 * ps, y0 * ps, z0 * ps, x1 * ps, y1 * ps, z1 * ps);
       if (colors)
         colors.push(...color.webgl, ...color.webgl);
@@ -3885,8 +3762,8 @@ class ThreeView {
 class Model {
   // Static class methods for default settings.
   // Default world is centered, patchSize = 13, min/max = 16
-  static defaultWorld (size = 13, max = 16) {
-    return World.defaultOptions(size, max)
+  static defaultWorld (maxX = 16, maxY = maxX) {
+    return World.defaultOptions(maxX, maxY)
   }
   // Default renderer is ThreeView.js
   static defaultRenderer () {
@@ -3907,6 +3784,8 @@ class Model {
     this.world = new World(worldOptions);
     // Create animator to handle draw/step.
     this.anim = new Animator(this);
+    // Default colormap. Change this to another if you'd prefer.
+    this.colorMap = ColorMap.Basic16;
 
     // View setup.
     this.spriteSheet = new SpriteSheet();
@@ -4010,6 +3889,8 @@ class Model {
     if (restart) this.start();
   }
 
+  randomColor () { return this.colorMap.randomColor() }
+
 // ### User Model Creation
   // A user's model is made by subclassing Model and over-riding these
   // 3 abstract methods. `super` need not be called.
@@ -4100,18 +3981,8 @@ class RGBDataSet extends DataSet {
     }
     // this.src = img.src // Might be useful? Flags as image data set.
   }
-
-  // Convert RGB to a number.
-  // https://blog.mapbox.com/global-elevation-data-6689f1d0ba65
-  // height = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1)
-  // by default this assumes the values are in decimeters,
-  // but it can be overwritten.
-  // This funnction gets called in a tight loop for every pixel.
-  // rgb2Number (r, g, b, floor = -10000, scale = 0.1) {
-  //   return floor + ((r * 256 * 256 + g * 256 + b) * scale)
-  // }
 }
 
 /* eslint-disable */
 
-export { AgentArray, AgentSet, Animator, AscDataSet, Color, ColorMap, DataSet, DataSetIO, Link, Links, Model, Patch, Patches, RGBDataSet, SpriteSheet, ThreeView, ThreeMeshes, Turtle, Turtles, World, util };
+export { AgentArray, AgentSet, Animator, Color, ColorMap, DataSet, Link, Links, Model, Patch, Patches, RGBDataSet, SpriteSheet, ThreeView, ThreeMeshes, Turtle, Turtles, World, util };

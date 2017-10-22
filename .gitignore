@@ -2,11 +2,8 @@
 
 # Derived files other than docs/
 /libs/
+/dist/
 /test/
-# /test/Attic
-/models/scripts/
-# /models/scripts/index.html
-# /models/src/index.html
 
 node_modules/
 npm-debug.log
