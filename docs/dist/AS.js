@@ -1911,6 +1911,49 @@ class DataSet {
   }
 }
 
+// import Color from './Color.js'
+
+// Class Link instances form a link between two turtles, forming a graph.
+// Flyweight object creation, see Patch/Patches.
+// https://medium.com/dailyjs/two-headed-es6-classes-fe369c50b24
+
+// The core default variables needed by a Link.
+// Use links.setDefault(name, val) to change
+// Modelers add additional "own variables" as needed.
+class Link$2 {
+  static defaultVariables () { // Core variables for patches. Not 'own' variables.
+    return {
+      end0: null,       // Turtles: end0 & 1 are turtle ends of the link
+      end1: null,
+      width: 1          // THREE: must be 1. Canvas2D (unsupported) has widths.
+    }
+  }
+  // Initialize a Link
+  constructor () {
+    Object.assign(this, Link$2.defaultVariables());
+  }
+  init (from, to) {
+    this.end0 = from;
+    this.end1 = to;
+    from.links.push(this);
+    to.links.push(this);
+  }
+  // Remove this link from its agentset
+  die () {
+    this.agentSet.removeAgent(this);
+    util.removeArrayItem(this.end0.links, this);
+    util.removeArrayItem(this.end1.links, this);
+  }
+
+  bothEnds () { return [this.end0, this.end1] }
+  length () { return this.end0.distance(this.end1) }
+  otherEnd (turtle) {
+    if (turtle === this.end0) return this.end1
+    if (turtle === this.end1) return this.end0
+    throw Error(`Link.otherEnd: turtle not a link turtle: ${turtle}`)
+  }
+}
+
 // Flyweight object creation, see Patch/Patches.
 
 // Class Link instances form a link between two turtles, forming a graph.
@@ -1935,44 +1978,40 @@ class DataSet {
 //   // [Drawing Lines is Hard!](https://mattdesl.svbtle.com/drawing-lines-is-hard)
 //   width: 1
 // }
-class Link {
-  static defaultVariables () { // Core variables for patches. Not 'own' variables.
+// class Link {
+class Link extends Link$2 {
+  static defaultVariables () { // Instance variables.
     return {
-      end0: null,       // Turtles: end0 & 1 are turtle ends of the link
-      end1: null,
-      typedColor: null, // A Color.color, converted by getter/setters below
-      width: 1          // THREE: must be 1. Canvas2D (unsupported) has widths.
+      typedColor: null // A Color.color, converted by getter/setters below
     }
   }
   // Initialize a Link
   constructor () {
-    // const vars = Link.defaultVariables()
-    // Object.assign(this, vars)
-    // this.color = null // avoid getter/setter used by assign
+    super();
     Object.assign(this, Link.defaultVariables());
   }
-  init (from, to) {
-    this.end0 = from;
-    this.end1 = to;
-    from.links.push(this);
-    to.links.push(this);
-  }
-  // Remove this link from its agentset
-  die () {
-    this.agentSet.removeAgent(this);
-    // util.removeItem(this.end0.links, this)
-    // util.removeItem(this.end1.links, this)
-    util.removeArrayItem(this.end0.links, this);
-    util.removeArrayItem(this.end1.links, this);
-  }
-
-  bothEnds () { return [this.end0, this.end1] }
-  length () { return this.end0.distance(this.end1) }
-  otherEnd (turtle) {
-    if (turtle === this.end0) return this.end1
-    if (turtle === this.end1) return this.end0
-    throw Error(`Link.otherEnd: turtle not a link turtle: ${turtle}`)
-  }
+  // init (from, to) {
+  //   this.end0 = from
+  //   this.end1 = to
+  //   from.links.push(this)
+  //   to.links.push(this)
+  // }
+  // // Remove this link from its agentset
+  // die () {
+  //   this.agentSet.removeAgent(this)
+  //   // util.removeItem(this.end0.links, this)
+  //   // util.removeItem(this.end1.links, this)
+  //   util.removeArrayItem(this.end0.links, this)
+  //   util.removeArrayItem(this.end1.links, this)
+  // }
+  //
+  // bothEnds () { return [this.end0, this.end1] }
+  // length () { return this.end0.distance(this.end1) }
+  // otherEnd (turtle) {
+  //   if (turtle === this.end0) return this.end1
+  //   if (turtle === this.end1) return this.end0
+  //   throw Error(`Link.otherEnd: turtle not a link turtle: ${turtle}`)
+  // }
 
   // Use typedColor as the real color. Amazingly enough, setdefaults
   // of 'color' ends up calling setter, thus making typedColor the default name.
@@ -1993,16 +2032,8 @@ class Link {
 }
 
 // Links are a collection of all the Link objects between turtles.
-class Links extends AgentSet {
-  // constructor (model, AgentClass, name) {
-  //   // AgentSet sets these variables:
-  //   // model, name, baseSet, world: model.world & agentProto: new AgentClass
-  //   super(model, AgentClass, name)
-  //   // Skip if an basic Array ctor or a breedSet. See AgentSet comments.
-  //   // if (typeof model === 'number' || this.isBreedSet()) return
-  //
-  //   // this.labels = [] // sparse array for labels
-  // }
+class Links$2 extends AgentSet {
+  // Use AgentSeet ctor: constructor (model, AgentClass, name)
 
   // Factory: Add 1 or more links from the from turtle to the to turtle(s) which
   // can be a single turtle or an array of turtles. The optional init
@@ -2013,9 +2044,35 @@ class Links extends AgentSet {
       const link = this.addAgent();
       link.init(from, t);
       initFcn(link);
-      if (!link.color) link.color = this.model.randomColor();
       return link
     }) // REMIND: return single link if to not an array?
+  }
+}
+
+// import AgentSet from './core/AgentSet.js'
+// Links are a collection of all the Link objects between turtles.
+// class Links extends AgentSet {
+class Links extends Links$2 {
+  // Use AgentSeet ctor: constructor (model, AgentClass, name)
+
+  // Factory: Add 1 or more links from the from turtle to the to turtle(s) which
+  // can be a single turtle or an array of turtles. The optional init
+  // proc is called on the new link after inserting in the agentSet.
+  // create (from, to, initFcn = (link) => {}) {
+  create (from, to, initFcn) {
+    const links = super.create(from, to, initFcn);
+    links.forEach((link) => {
+      if (!link.color) link.color = this.model.randomColor();
+    });
+    return links
+    // if (!Array.isArray(to)) to = [to]
+    // return to.map((t) => { // REMIND: skip dups
+    //   const link = this.addAgent()
+    //   link.init(from, t)
+    //   initFcn(link)
+    //   if (!link.color) link.color = this.model.randomColor()
+    //   return link
+    // }) // REMIND: return single link if to not an array?
   }
 }
 
