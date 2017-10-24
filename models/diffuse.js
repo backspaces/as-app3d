@@ -38,7 +38,9 @@ class DiffuseModel extends Model {
       })
     })
 
-    this.patches.diffuse('ran', 0.05, this.cmap)
+    // this.patches.diffuse('ran', 0.05, this.cmap)
+    this.patches.diffuse('ran', 0.05)
+    this.patches.scaleColors(this.cmap, 'ran', 0, 1)
   }
 }
 

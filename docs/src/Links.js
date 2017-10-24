@@ -25,6 +25,9 @@ class Links extends CoreLinks {
     //   return link
     // }) // REMIND: return single link if to not an array?
   }
+
+  // REMIND: Test that agentarray returned.
+  test () { console.log(this.map(link => link.id)) }
 }
 
 export default Links

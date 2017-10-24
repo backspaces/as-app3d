@@ -2074,6 +2074,9 @@ class Links extends Links$2 {
     //   return link
     // }) // REMIND: return single link if to not an array?
   }
+
+  // REMIND: Test that agentarray returned.
+  test () { console.log(this.map(link => link.id)); }
 }
 
 // class World defines the coordinate system for the model.
@@ -2125,8 +2128,8 @@ class World {
 }
 
 // Patches are the world other agentsets live on. They create a coord system
-// from Model's world values: size, minX, maxX, minY, maxY
-class Patches extends AgentSet {
+// from Model's world values: minX, maxX, minY, maxY
+class Patches$2 extends AgentSet {
   constructor (model, AgentClass, name) {
     // AgentSet sets these variables:
     // model, name, baseSet, world: model.world, agentProto: new AgentClass
@@ -2137,7 +2140,7 @@ class Patches extends AgentSet {
     if (this.isBreedSet()) return
 
     this.populate();
-    this.setPixels();
+    // this.setPixels()
     this.labels = []; // sparse array for labels
   }
   // Set up all the patches.
@@ -2146,6 +2149,299 @@ class Patches extends AgentSet {
       this.addAgent(); // Object.create(this.agentProto))
     });
   }
+  // Setup pixels ctx used for patch.color: `draw` and `importColors`
+  // setPixels () {
+  //   const {numX, numY} = this.model.world
+  //   this.pixels = {
+  //     ctx: util.createCtx(numX, numY)
+  //   }
+  //   this.setImageData()
+  // }
+  // Create the pixels object used by `setPixels` and `installColors`
+  // setImageData () {
+  //   const pixels = this.pixels
+  //   pixels.imageData = util.ctxImageData(pixels.ctx)
+  //   pixels.data8 = pixels.imageData.data
+  //   pixels.data = new Uint32Array(pixels.data8.buffer)
+  // }
+
+  setDefault (name, value) {
+    if (name === 'color') {
+      this.ask(p => { p.setColor(value); });
+      util.logOnce(`patches.setDefault(color, value): color default not supported. Clearing to value`);
+    } else {
+      super.setDefault(name, value);
+    }
+  }
+  // Get/Set label. REMIND: not implemented.
+  // Set removes label if label is null or undefined.
+  // Get returns undefined if no label.
+  setLabel (patch, label) { // REMIND: does this work for breeds?
+    if (label == null) // null or undefined
+      delete this.labels[patch.id];
+    else
+      this.labels[patch.id] = label;
+  }
+  getLabel (patch) {
+    return this.labels[patch.id]
+  }
+
+  // Return the offsets from a patch for its 8 element neighbors.
+  // Specialized to be faster than inRect below.
+  neighborsOffsets (x, y) {
+    const {minX, maxX, minY, maxY, numX} = this.model.world;
+    if (x === minX) {
+      if (y === minY) return [-numX, -numX + 1, 1]
+      if (y === maxY) return [1, numX + 1, numX]
+      return [-numX, -numX + 1, 1, numX + 1, numX]
+    }
+    if (x === maxX) {
+      if (y === minY) return [-numX - 1, -numX, -1]
+      if (y === maxY) return [numX, numX - 1, -1]
+      return [-numX - 1, -numX, numX, numX - 1, -1]
+    }
+    if (y === minY) return [-numX - 1, -numX, -numX + 1, 1, -1]
+    if (y === maxY) return [1, numX + 1, numX, numX - 1, -1]
+    return [-numX - 1, -numX, -numX + 1, 1, numX + 1, numX, numX - 1, -1]
+  }
+  // Return the offsets from a patch for its 4 element neighbors (N,S,E,W)
+  neighbors4Offsets (x, y) {
+    const numX = this.model.world.numX;
+    return this.neighborsOffsets(x, y)
+      .filter((n) => Math.abs(n) === 1 || Math.abs(n) === numX) // slightly faster
+      // .filter((n) => [1, -1, numX, -numX].indexOf(n) >= 0)
+      // .filter((n) => [1, -1, numX, -numX].includes(n)) // slower than indexOf
+  }
+  // Return my 8 patch neighbors
+  neighbors (patch) {
+    const {id, x, y} = patch;
+    const offsets = this.neighborsOffsets(x, y);
+    const as = new AgentArray(offsets.length);
+    offsets.forEach((o, i) => { as[i] = this[o + id]; });
+    return as
+  }
+  // Return my 4 patch neighbors
+  neighbors4 (patch) {
+    const {id, x, y} = patch;
+    const offsets = this.neighbors4Offsets(x, y);
+    const as = new AgentArray(offsets.length);
+    offsets.forEach((o, i) => { as[i] = this[o + id]; });
+    return as
+  }
+
+  // Return a random valid int x,y point in patch space
+  randomPt () {
+    const {minX, maxX, minY, maxY} = this.model.world;
+    return [util.randomInt2(minX, maxX), util.randomInt2(minY, maxY)]
+  }
+
+  // installPixels () {
+  //   const pixels = this.pixels
+  //   pixels.ctx.putImageData(pixels.imageData, 0, 0)
+  //   return pixels
+  // }
+  // // Draws, or "imports" an image URL into the drawing layer.
+  // // The image is scaled to fit the drawing layer.
+  // // This is an async function, using es6 Promises.
+  // importDrawing (imageSrc) {
+  //   util.imagePromise(imageSrc)
+  //   .then((img) => this.installDrawing(img))
+  // }
+  // // Direct install image into the given context, not async.
+  // installDrawing (img, ctx = this.model.contexts.drawing) {
+  //   util.fillCtxWithImage(ctx, img)
+  // }
+  // importColors (imageSrc) {
+  //   util.imagePromise(imageSrc)
+  //   .then((img) => this.installColors(img))
+  // }
+  // // Direct install image into the patch colors, not async.
+  // installColors (img) {
+  //   util.fillCtxWithImage(this.pixels.ctx, img)
+  //   this.setImageData()
+  // }
+
+  // Import/export DataSet to/from patch variable `patchVar`.
+  // `useNearest`: true for fast rounding to nearest; false for bi-linear.
+  importDataSet (dataSet, patchVar, useNearest = false) {
+    if (this.isBreedSet()) { // REMIND: error
+      util.warn('Patches: exportDataSet called with breed, using patches');
+      this.baseSet.importDataSet(dataSet, patchVar, useNearest);
+    }
+    const {numX, numY} = this.model.world;
+    const dataset = dataSet.resample(numX, numY, useNearest);
+    this.ask(p => { p[patchVar] = dataset.data[p.id]; });
+    // for (const patch of this)
+    //   patch[patchVar] = dataset.data[patch.id]
+  }
+  exportDataSet (patchVar, Type = Array) {
+    if (this.isBreedSet()) {
+      util.warn('Patches: exportDataSet called with breed, using patches');
+      this.baseSet.exportDataSet(patchVar, Type);
+    }
+    const {numX, numY} = this.model.world;
+    // let data = util.arrayProps(this, patchVar)
+    let data = this.props(this, patchVar);
+    data = util.convertArray(data, Type);
+    return new DataSet(numX, numY, data)
+  }
+
+  // Return id/index given valid x,y integers
+  patchIndex (x, y) {
+    const {minX, maxY, numX} = this.model.world;
+    return (x - minX) + (numX * (maxY - y))
+  }
+
+  // Return patch at x,y float values
+  // Return undefined if off-world
+  patch (x, y) {
+    if (!this.model.world.isOnWorld(x, y)) return undefined
+    const intX = x === this.model.world.maxXcor
+      ? this.model.world.maxX : Math.round(x); // handle n.5 round up to n + 1
+    const intY = y === this.model.world.maxYcor
+      ? this.model.world.maxY : Math.round(y);
+    return this.patchXY(intX, intY)
+  }
+  // Return the patch at x,y where both are valid integer patch coordinates.
+  patchXY (x, y) { return this[this.patchIndex(x, y)] }
+
+  // Patches in rectangle dx, dy from p, dx, dy integers.
+  // Both dx & dy are half width/height of rect
+  patchRect (p, dx, dy = dx, meToo = true) {
+    // Return cached rect if one exists.
+    if (p.rectCache) {
+      const index = this.cacheIndex(dx, dy, meToo);
+      const rect = p.rectCache[index];
+      if (rect) return rect
+    }
+    const rect = new AgentArray();
+    let {minX, maxX, minY, maxY} = this.model.world;
+    minX = Math.max(minX, p.x - dx);
+    maxX = Math.min(maxX, p.x + dx);
+    minY = Math.max(minY, p.y - dy);
+    maxY = Math.min(maxY, p.y + dy);
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const pnext = this.patchXY(x, y);
+        if (p !== pnext || meToo) rect.push(pnext);
+      }
+    }
+    return rect
+  }
+
+  // Performance: create a cached rect of this size in sparse array.
+  // Index of cached rect is dx * dy + meToo ? 0 : -1.
+  // This works for edge rects that are not that full size.
+  // patchRect will use this if matches dx, dy, meToo.
+  cacheIndex (dx, dy = dx, meToo = true) {
+    return (2 * dx + 1) * (2 * dy + 1) + (meToo ? 0 : -1)
+  }
+  cacheRect (dx, dy = dx, meToo = true, clear = true) {
+    const index = this.cacheIndex(dx, dy, meToo);
+    this.ask(p => {
+      if (!p.rectCache || clear) p.rectCache = [];
+      const rect = this.inRect(p, dx, dy, meToo);
+      p.rectCache[index] = rect;
+    });
+  }
+
+  // Return patches within the patch rect, default is square & meToo
+  inRect (patch, dx, dy = dx, meToo = true) {
+    const pRect = this.patchRect(patch, dx, dy, meToo);
+    if (this.isBaseSet()) return pRect
+    return pRect.withBreed(this)
+  }
+  // Return patches within radius distance of patch
+  inRadius (patch, radius, meToo = true) {
+    const pRect = this.inRect(patch, radius, radius, meToo);
+    return pRect.inRadius(patch, radius, meToo)
+  }
+  // Patches in cone from p in direction `angle`, with `coneAngle` and `radius`
+  inCone (patch, radius, coneAngle, direction, meToo = true) {
+    const pRect = this.inRect(patch, radius, radius, meToo);
+    return pRect.inCone(patch, radius, coneAngle, direction, meToo)
+  }
+
+  // Return patch at distance and angle from obj's (patch or turtle)
+  // x, y (floats). If off world, return undefined.
+  // To use heading: patchAtDirectionAndDistance(obj, util.angle(heading), distance)
+  // Does not take into account the angle of the obj .. turtle.theta for example.
+  patchAtDirectionAndDistance (obj, angle, distance) {
+    let {x, y} = obj;
+    x = x + distance * Math.cos(angle);
+    y = y + distance * Math.sin(angle);
+    return this.patch(x, y)
+  }
+  // patchLeftAndAhead (dTheta, distance) {
+  //   return this.patchAtDirectionAndDistance(dTheta, distance)
+  // }
+  // patchRightAndAhead (dTheta, distance) {
+  //   return this.patchAtDirectionAndDistance(-dTheta, distance)
+  // }
+
+  // Diffuse the value of patch variable `p.v` by distributing `rate` percent
+  // of each patch's value of `v` to its neighbors.
+  // If the patch has less than 4/8 neighbors, return the extra to the patch.
+  diffuse (v, rate) {
+    this.diffuseN(8, v, rate);
+  }
+  diffuse4 (v, rate) {
+    this.diffuseN(4, v, rate);
+  }
+  diffuseN (n, v, rate) {
+    // Note: for-of loops removed: chrome can't optimize them
+    // test/apps/patches.js 22fps -> 60fps
+    // zero temp variable if not yet set
+    if (this[0]._diffuseNext === undefined)
+      // for (const p of this) p._diffuseNext = 0
+      for (let i = 0; i < this.length; i++)
+        this[i]._diffuseNext = 0;
+
+    // pass 1: calculate contribution of all patches to themselves and neighbors
+    // for (const p of this) {
+    for (let i = 0; i < this.length; i++) {
+      const p = this[i];
+      const dv = p[v] * rate;
+      const dvn = dv / n;
+      const neighbors = (n === 8) ? p.neighbors : p.neighbors4;
+      const nn = neighbors.length;
+      p._diffuseNext += p[v] - dv + (n - nn) * dvn;
+      // for (const n of neighbors) n._diffuseNext += dvn
+      for (let i = 0; i < neighbors.length; i++) neighbors[i]._diffuseNext += dvn;
+    }
+    // pass 2: set new value for all patches, zero temp,
+    // for (const p of this) {
+    for (let i = 0; i < this.length; i++) {
+      const p = this[i];
+      p[v] = p._diffuseNext;
+      p._diffuseNext = 0;
+    }
+  }
+}
+
+// import AgentArray from './core/AgentArray.js'
+// import AgentSet from './core/AgentSet.js'
+// import DataSet from './core/DataSet.js'
+// Patches are the world other agentsets live on. They create a coord system
+// from Model's world values: size, minX, maxX, minY, maxY
+// class Patches extends AgentSet {
+class Patches extends Patches$2 {
+  constructor (model, AgentClass, name) {
+    super(model, AgentClass, name);
+
+    // Skip if a breedSet (don't rebuild patches!).
+    if (this.isBreedSet()) return
+
+    // this.populate()
+    this.setPixels();
+    // this.labels = [] // sparse array for labels
+  }
+  // Set up all the patches.
+  // populate () {
+  //   util.repeat(this.model.world.numX * this.model.world.numY, (i) => {
+  //     this.addAgent() // Object.create(this.agentProto))
+  //   })
+  // }
   // Setup pixels ctx used for patch.color: `draw` and `importColors`
   setPixels () {
     const {numX, numY} = this.model.world;
@@ -2186,58 +2482,58 @@ class Patches extends AgentSet {
   //   return this.labels[patch.id]
   // }
 
-  // Return the offsets from a patch for its 8 element neighbors.
-  // Specialized to be faster than inRect below.
-  neighborsOffsets (x, y) {
-    const {minX, maxX, minY, maxY, numX} = this.model.world;
-    if (x === minX) {
-      if (y === minY) return [-numX, -numX + 1, 1]
-      if (y === maxY) return [1, numX + 1, numX]
-      return [-numX, -numX + 1, 1, numX + 1, numX]
-    }
-    if (x === maxX) {
-      if (y === minY) return [-numX - 1, -numX, -1]
-      if (y === maxY) return [numX, numX - 1, -1]
-      return [-numX - 1, -numX, numX, numX - 1, -1]
-    }
-    if (y === minY) return [-numX - 1, -numX, -numX + 1, 1, -1]
-    if (y === maxY) return [1, numX + 1, numX, numX - 1, -1]
-    return [-numX - 1, -numX, -numX + 1, 1, numX + 1, numX, numX - 1, -1]
-  }
-  // Return the offsets from a patch for its 4 element neighbors (N,S,E,W)
-  neighbors4Offsets (x, y) {
-    const numX = this.model.world.numX;
-    return this.neighborsOffsets(x, y)
-      .filter((n) => Math.abs(n) === 1 || Math.abs(n) === numX) // slightly faster
-      // .filter((n) => [1, -1, numX, -numX].indexOf(n) >= 0)
-      // .filter((n) => [1, -1, numX, -numX].includes(n)) // slower than indexOf
-  }
-  // Return my 8 patch neighbors
-  neighbors (patch) {
-    const {id, x, y} = patch;
-    const offsets = this.neighborsOffsets(x, y);
-    const as = new AgentArray(offsets.length);
-    offsets.forEach((o, i) => { as[i] = this[o + id]; });
-    return as
-    // offsets.forEach((o, i, a) => { a[i] = this[o + id] })
-    // return this.asAgentSet(offsets)
-  }
-  // Return my 4 patch neighbors
-  neighbors4 (patch) {
-    const {id, x, y} = patch;
-    const offsets = this.neighbors4Offsets(x, y);
-    const as = new AgentArray(offsets.length);
-    offsets.forEach((o, i) => { as[i] = this[o + id]; });
-    return as
-  }
-
-  // Return a random valid int x,y point in patch space
-  randomPt () {
-    // const {minXcor, maxXcor, minYcor, maxYcor} = this.model.world
-    // return [util.randomFloat2(minXcor, maxXcor), util.randomFloat2(minYcor, maxYcor)]
-    const {minX, maxX, minY, maxY} = this.model.world;
-    return [util.randomInt2(minX, maxX), util.randomInt2(minY, maxY)]
-  }
+  // // Return the offsets from a patch for its 8 element neighbors.
+  // // Specialized to be faster than inRect below.
+  // neighborsOffsets (x, y) {
+  //   const {minX, maxX, minY, maxY, numX} = this.model.world
+  //   if (x === minX) {
+  //     if (y === minY) return [-numX, -numX + 1, 1]
+  //     if (y === maxY) return [1, numX + 1, numX]
+  //     return [-numX, -numX + 1, 1, numX + 1, numX]
+  //   }
+  //   if (x === maxX) {
+  //     if (y === minY) return [-numX - 1, -numX, -1]
+  //     if (y === maxY) return [numX, numX - 1, -1]
+  //     return [-numX - 1, -numX, numX, numX - 1, -1]
+  //   }
+  //   if (y === minY) return [-numX - 1, -numX, -numX + 1, 1, -1]
+  //   if (y === maxY) return [1, numX + 1, numX, numX - 1, -1]
+  //   return [-numX - 1, -numX, -numX + 1, 1, numX + 1, numX, numX - 1, -1]
+  // }
+  // // Return the offsets from a patch for its 4 element neighbors (N,S,E,W)
+  // neighbors4Offsets (x, y) {
+  //   const numX = this.model.world.numX
+  //   return this.neighborsOffsets(x, y)
+  //     .filter((n) => Math.abs(n) === 1 || Math.abs(n) === numX) // slightly faster
+  //     // .filter((n) => [1, -1, numX, -numX].indexOf(n) >= 0)
+  //     // .filter((n) => [1, -1, numX, -numX].includes(n)) // slower than indexOf
+  // }
+  // // Return my 8 patch neighbors
+  // neighbors (patch) {
+  //   const {id, x, y} = patch
+  //   const offsets = this.neighborsOffsets(x, y)
+  //   const as = new AgentArray(offsets.length)
+  //   offsets.forEach((o, i) => { as[i] = this[o + id] })
+  //   return as
+  //   // offsets.forEach((o, i, a) => { a[i] = this[o + id] })
+  //   // return this.asAgentSet(offsets)
+  // }
+  // // Return my 4 patch neighbors
+  // neighbors4 (patch) {
+  //   const {id, x, y} = patch
+  //   const offsets = this.neighbors4Offsets(x, y)
+  //   const as = new AgentArray(offsets.length)
+  //   offsets.forEach((o, i) => { as[i] = this[o + id] })
+  //   return as
+  // }
+  //
+  // // Return a random valid int x,y point in patch space
+  // randomPt () {
+  //   // const {minXcor, maxXcor, minYcor, maxYcor} = this.model.world
+  //   // return [util.randomFloat2(minXcor, maxXcor), util.randomFloat2(minYcor, maxYcor)]
+  //   const {minX, maxX, minY, maxY} = this.model.world
+  //   return [util.randomInt2(minX, maxX), util.randomInt2(minY, maxY)]
+  // }
 
   installPixels () {
     const pixels = this.pixels;
@@ -2280,218 +2576,233 @@ class Patches extends AgentSet {
     this.setImageData();
   }
 
-  // Import/export DataSet to/from patch variable `patchVar`.
-  // `useNearest`: true for fast rounding to nearest; false for bi-linear.
-  importDataSet (dataSet, patchVar, useNearest = false) {
-    if (this.isBreedSet()) { // REMIND: error
-      util.warn('Patches: exportDataSet called with breed, using patches');
-      this.baseSet.importDataSet(dataSet, patchVar, useNearest);
-    }
-    const {numX, numY} = this.model.world;
-    const dataset = dataSet.resample(numX, numY, useNearest);
-    this.ask(p => { p[patchVar] = dataset.data[p.id]; });
-    // for (const patch of this)
-    //   patch[patchVar] = dataset.data[patch.id]
-  }
-  exportDataSet (patchVar, Type = Array) {
-    if (this.isBreedSet()) {
-      util.warn('Patches: exportDataSet called with breed, using patches');
-      this.baseSet.exportDataSet(patchVar, Type);
-    }
-    const {numX, numY} = this.model.world;
-    // let data = util.arrayProps(this, patchVar)
-    let data = this.props(this, patchVar);
-    data = util.convertArray(data, Type);
-    return new DataSet(numX, numY, data)
-  }
-
-  // Return true if x,y floats are within patch world.
-  // isOnWorld (x, y) {
-  //   const {minXcor, maxXcor, minYcor, maxYcor} = this.model.world
-  //   return (minXcor <= x) && (x <= maxXcor) && (minYcor <= y) && (y <= maxYcor)
+  // // Import/export DataSet to/from patch variable `patchVar`.
+  // // `useNearest`: true for fast rounding to nearest; false for bi-linear.
+  // importDataSet (dataSet, patchVar, useNearest = false) {
+  //   if (this.isBreedSet()) { // REMIND: error
+  //     util.warn('Patches: exportDataSet called with breed, using patches')
+  //     this.baseSet.importDataSet(dataSet, patchVar, useNearest)
+  //   }
+  //   const {numX, numY} = this.model.world
+  //   const dataset = dataSet.resample(numX, numY, useNearest)
+  //   this.ask(p => { p[patchVar] = dataset.data[p.id] })
+  //   // for (const patch of this)
+  //   //   patch[patchVar] = dataset.data[patch.id]
   // }
-  // Return the patch id/index given valid integer x,y in patch coords
-  patchIndex (x, y) {
-    const {minX, maxY, numX} = this.model.world;
-    return (x - minX) + (numX * (maxY - y))
-  }
-  // patchXYToIndex (x, y) {
+  // exportDataSet (patchVar, Type = Array) {
+  //   if (this.isBreedSet()) {
+  //     util.warn('Patches: exportDataSet called with breed, using patches')
+  //     this.baseSet.exportDataSet(patchVar, Type)
+  //   }
+  //   const {numX, numY} = this.model.world
+  //   // let data = util.arrayProps(this, patchVar)
+  //   let data = this.props(this, patchVar)
+  //   data = util.convertArray(data, Type)
+  //   return new DataSet(numX, numY, data)
+  // }
+  //
+  // // Return true if x,y floats are within patch world.
+  // // isOnWorld (x, y) {
+  // //   const {minXcor, maxXcor, minYcor, maxYcor} = this.model.world
+  // //   return (minXcor <= x) && (x <= maxXcor) && (minYcor <= y) && (y <= maxYcor)
+  // // }
+  // // Return the patch id/index given valid integer x,y in patch coords
+  // patchIndex (x, y) {
   //   const {minX, maxY, numX} = this.model.world
   //   return (x - minX) + (numX * (maxY - y))
   // }
-  // // Return the patch x,y patch coords given a valid patches id/index
-  // patchIndexToXY (ix) {
-  //   const {minX, maxY, numX} = this.model.world
-  //   return [(ix % numX) + minX, maxY - Math.floor(ix / numX)]
+  // // patchXYToIndex (x, y) {
+  // //   const {minX, maxY, numX} = this.model.world
+  // //   return (x - minX) + (numX * (maxY - y))
+  // // }
+  // // // Return the patch x,y patch coords given a valid patches id/index
+  // // patchIndexToXY (ix) {
+  // //   const {minX, maxY, numX} = this.model.world
+  // //   return [(ix % numX) + minX, maxY - Math.floor(ix / numX)]
+  // // }
+  // // // Convert to/from pixel coords & patch coords
+  // // pixelXYToPatchXY (x, y) {
+  // //   const {patchSize, minXcor, maxYcor} = this.model.world
+  // //   return [minXcor + (x / patchSize), maxYcor - (y / patchSize)]
+  // // }
+  // // patchXYToPixelXY (x, y) {
+  // //   const {patchSize, minXcor, maxYcor} = this.model.world
+  // //   return [(x - minXcor) * patchSize, (maxYcor - y) * patchSize]
+  // // }
+  //
+  // // Utils for NetLogo patch location methods.
+  // // All return `undefined` if not onworld.
+  // // Note that foo == null checks for both undefined and null (== vs ===)
+  // // and is considered an OK practice.
+  //
+  // // Return patch at x,y float values according to topology.
+  // // Return undefined if off-world
+  // patch (x, y) {
+  //   if (!this.model.world.isOnWorld(x, y)) return undefined
+  //   const intX = x === this.model.world.maxXcor
+  //     ? this.model.world.maxX : Math.round(x) // handle n.5 round up to n + 1
+  //   const intY = y === this.model.world.maxYcor
+  //     ? this.model.world.maxY : Math.round(y)
+  //   return this.patchXY(intX, intY)
   // }
-  // // Convert to/from pixel coords & patch coords
-  // pixelXYToPatchXY (x, y) {
-  //   const {patchSize, minXcor, maxYcor} = this.model.world
-  //   return [minXcor + (x / patchSize), maxYcor - (y / patchSize)]
+  // // Return the patch at x,y where both are valid integer patch coordinates.
+  // patchXY (x, y) { return this[this.patchIndex(x, y)] }
+  //
+  // // Patches in rectangle dx, dy from p, dx, dy integers.
+  // // Both dx & dy are half width/height of rect
+  // patchRect (p, dx, dy = dx, meToo = true) {
+  //   // Return cached rect if one exists.
+  //   // if (p.pRect && p.pRect.length === dx * dy) return p.pRect
+  //   if (p.rectCache) {
+  //     const index = this.cacheIndex(dx, dy, meToo)
+  //     const rect = p.rectCache[index]
+  //     // const rect = p.rectCache[this.cacheIndex(dx, dy, meToo)]
+  //     if (rect) return rect
+  //   }
+  //   const rect = new AgentArray()
+  //   let {minX, maxX, minY, maxY} = this.model.world
+  //   minX = Math.max(minX, p.x - dx)
+  //   maxX = Math.min(maxX, p.x + dx)
+  //   minY = Math.max(minY, p.y - dy)
+  //   maxY = Math.min(maxY, p.y + dy)
+  //   for (let y = minY; y <= maxY; y++) {
+  //     for (let x = minX; x <= maxX; x++) {
+  //       const pnext = this.patchXY(x, y)
+  //       if (p !== pnext || meToo) rect.push(pnext)
+  //     }
+  //   }
+  //   return rect
   // }
-  // patchXYToPixelXY (x, y) {
-  //   const {patchSize, minXcor, maxYcor} = this.model.world
-  //   return [(x - minXcor) * patchSize, (maxYcor - y) * patchSize]
+  //
+  // // Performance: create a cached rect of this size in sparse array.
+  // // Index of cached rect is dx * dy + meToo ? 0 : -1.
+  // // This works for edge rects that are not that full size.
+  // // patchRect will use this if matches dx, dy, meToo.
+  // cacheIndex (dx, dy = dx, meToo = true) {
+  //   return (2 * dx + 1) * (2 * dy + 1) + (meToo ? 0 : -1)
+  // }
+  // cacheRect (dx, dy = dx, meToo = true, clear = true) {
+  //   const index = this.cacheIndex(dx, dy, meToo)
+  //   this.ask(p => {
+  //     if (!p.rectCache || clear) p.rectCache = []
+  //     const rect = this.inRect(p, dx, dy, meToo)
+  //     p.rectCache[index] = rect
+  //   })
   // }
 
-  // Utils for NetLogo patch location methods.
-  // All return `undefined` if not onworld.
-  // Note that foo == null checks for both undefined and null (== vs ===)
-  // and is considered an OK practice.
+// // Return patches within the patch rect, default is square & meToo
+//   // inRect (patch, dx, dy = dx, meToo = true) {
+//   //   return this.inRect(patch, dx, dy, meToo)
+//   // }
+//   // Patches in circle radius (integer) from patch
+//   // inRadius (patch, radius, meToo = true) {
+//   //   const rSq = radius * radius
+//   //   const result = new AgentArray()
+//   //   const sqDistance = util.sqDistance // 10% faster
+//   //   const pRect = this.inRect(patch, radius, radius, meToo)
+//   //   for (let i = 0; i < pRect.length; i++) {
+//   //     const p = pRect[i]
+//   //     if (sqDistance(patch.x, patch.y, p.x, p.y) <= rSq) result.push(p)
+//   //   }
+//   //   return result
+//   // }
+//   inRect (patch, dx, dy = dx, meToo = true) {
+//     const pRect = this.patchRect(patch, dx, dy, meToo)
+//     if (this.isBaseSet()) return pRect
+//     return pRect.withBreed(this)
+//   }
+//   inRadius (patch, radius, meToo = true) {
+//     const pRect = this.inRect(patch, radius, radius, meToo)
+//     return pRect.inRadius(patch, radius, meToo)
+//   }
+//   // Patches in cone from p in direction `angle`, with `coneAngle` and `radius`
+//   inCone (patch, radius, coneAngle, direction, meToo = true) {
+//     const pRect = this.inRect(patch, radius, radius, meToo)
+//     return pRect.inCone(patch, radius, coneAngle, direction, meToo)
+//
+//     // const result = new AgentArray()
+//     // for (let i = 0; i < pRect.length; i++) {
+//     //   const p = pRect[i]
+//     //   const isIn = util.inCone(p.x, p.y, radius, coneAngle, direction, patch.x, patch.y)
+//     //   if (isIn && (patch !== p || meToo)) result.push(p)
+//     // }
+//     // return result
+//   }
+//
+//   // Return patch at distance and angle from obj's (patch or turtle)
+//   // x, y (floats). If off world, return undefined.
+//   // To use heading: patchAtDirectionAndDistance(obj, util.angle(heading), distance)
+//   // Does not take into account the angle of the obj .. turtle.theta for example.
+//   patchAtDirectionAndDistance (obj, angle, distance) {
+//     let {x, y} = obj
+//     x = x + distance * Math.cos(angle)
+//     y = y + distance * Math.sin(angle)
+//     return this.patch(x, y)
+//   }
+//   // patchLeftAndAhead (dTheta, distance) {
+//   //   return this.patchAtDirectionAndDistance(dTheta, distance)
+//   // }
+//   // patchRightAndAhead (dTheta, distance) {
+//   //   return this.patchAtDirectionAndDistance(-dTheta, distance)
+//   // }
+//
+//   // Diffuse the value of patch variable `p.v` by distributing `rate` percent
+//   // of each patch's value of `v` to its neighbors.
+//   // If a color map is given, scale the patch color via variable's value
+//   // If the patch has less than 4/8 neighbors, return the extra to the patch.
+//   diffuse (v, rate, colorMap = null, min = 0, max = 1) {
+//     this.diffuseN(8, v, rate, colorMap, min, max)
+//   }
+//   diffuse4 (v, rate, colorMap = null, min = 0, max = 1) {
+//     this.diffuseN(4, v, rate, colorMap, min, max)
+//   }
+//   diffuseN (n, v, rate, colorMap = null, min = 0, max = 1) {
+//     // Note: for-of loops removed: chrome can't optimize them
+//     // test/apps/patches.js 22fps -> 60fps
+//     // zero temp variable if not yet set
+//     if (this[0]._diffuseNext === undefined)
+//       // for (const p of this) p._diffuseNext = 0
+//       for (let i = 0; i < this.length; i++) this[i]._diffuseNext = 0
+//
+//     // pass 1: calculate contribution of all patches to themselves and neighbors
+//     // for (const p of this) {
+//     for (let i = 0; i < this.length; i++) {
+//       const p = this[i]
+//       const dv = p[v] * rate
+//       const dvn = dv / n
+//       const neighbors = (n === 8) ? p.neighbors : p.neighbors4
+//       const nn = neighbors.length
+//       p._diffuseNext += p[v] - dv + (n - nn) * dvn
+//       // for (const n of neighbors) n._diffuseNext += dvn
+//       for (let i = 0; i < neighbors.length; i++) neighbors[i]._diffuseNext += dvn
+//     }
+//     // pass 2: set new value for all patches, zero temp,
+//     // modify color if colorMap given
+//     // for (const p of this) {
+//     for (let i = 0; i < this.length; i++) {
+//       const p = this[i]
+//       p[v] = p._diffuseNext
+//       p._diffuseNext = 0
+//       if (colorMap)
+//         p.setColor(colorMap.scaleColor(p[v], min, max))
+//     }
+//   }
 
-  // Return patch at x,y float values according to topology.
-  // Return undefined if off-world
-  patch (x, y) {
-    if (!this.model.world.isOnWorld(x, y)) return undefined
-    const intX = x === this.model.world.maxXcor
-      ? this.model.world.maxX : Math.round(x); // handle n.5 round up to n + 1
-    const intY = y === this.model.world.maxYcor
-      ? this.model.world.maxY : Math.round(y);
-    return this.patchXY(intX, intY)
-  }
-  // Return the patch at x,y where both are valid integer patch coordinates.
-  patchXY (x, y) { return this[this.patchIndex(x, y)] }
-
-  // Patches in rectangle dx, dy from p, dx, dy integers.
-  // Both dx & dy are half width/height of rect
-  patchRect (p, dx, dy = dx, meToo = true) {
-    // Return cached rect if one exists.
-    // if (p.pRect && p.pRect.length === dx * dy) return p.pRect
-    if (p.rectCache) {
-      const index = this.cacheIndex(dx, dy, meToo);
-      const rect = p.rectCache[index];
-      // const rect = p.rectCache[this.cacheIndex(dx, dy, meToo)]
-      if (rect) return rect
-    }
-    const rect = new AgentArray();
-    let {minX, maxX, minY, maxY} = this.model.world;
-    minX = Math.max(minX, p.x - dx);
-    maxX = Math.min(maxX, p.x + dx);
-    minY = Math.max(minY, p.y - dy);
-    maxY = Math.min(maxY, p.y + dy);
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        const pnext = this.patchXY(x, y);
-        if (p !== pnext || meToo) rect.push(pnext);
-      }
-    }
-    return rect
-  }
-
-  // Performance: create a cached rect of this size in sparse array.
-  // Index of cached rect is dx * dy + meToo ? 0 : -1.
-  // This works for edge rects that are not that full size.
-  // patchRect will use this if matches dx, dy, meToo.
-  cacheIndex (dx, dy = dx, meToo = true) {
-    return (2 * dx + 1) * (2 * dy + 1) + (meToo ? 0 : -1)
-  }
-  cacheRect (dx, dy = dx, meToo = true, clear = true) {
-    const index = this.cacheIndex(dx, dy, meToo);
+  scaleColors (colorMap, variable, min, max) {
+    // for (let i = 0; i < this.length; i++) {
+    //   const p = this[i]
+    //   p.setColor(colorMap.scaleColor(p[variable], min, max))
+    // }
     this.ask(p => {
-      if (!p.rectCache || clear) p.rectCache = [];
-      const rect = this.inRect(p, dx, dy, meToo);
-      p.rectCache[index] = rect;
+      p.setColor(colorMap.scaleColor(p[variable], min, max));
     });
   }
 
-// Return patches within the patch rect, default is square & meToo
-  // inRect (patch, dx, dy = dx, meToo = true) {
-  //   return this.inRect(patch, dx, dy, meToo)
-  // }
-  // Patches in circle radius (integer) from patch
-  // inRadius (patch, radius, meToo = true) {
-  //   const rSq = radius * radius
-  //   const result = new AgentArray()
-  //   const sqDistance = util.sqDistance // 10% faster
-  //   const pRect = this.inRect(patch, radius, radius, meToo)
-  //   for (let i = 0; i < pRect.length; i++) {
-  //     const p = pRect[i]
-  //     if (sqDistance(patch.x, patch.y, p.x, p.y) <= rSq) result.push(p)
-  //   }
-  //   return result
-  // }
-  inRect (patch, dx, dy = dx, meToo = true) {
-    const pRect = this.patchRect(patch, dx, dy, meToo);
-    if (this.isBaseSet()) return pRect
-    return pRect.withBreed(this)
-  }
-  inRadius (patch, radius, meToo = true) {
-    const pRect = this.inRect(patch, radius, radius, meToo);
-    return pRect.inRadius(patch, radius, meToo)
-  }
-  // Patches in cone from p in direction `angle`, with `coneAngle` and `radius`
-  inCone (patch, radius, coneAngle, direction, meToo = true) {
-    const pRect = this.inRect(patch, radius, radius, meToo);
-    return pRect.inCone(patch, radius, coneAngle, direction, meToo)
-
-    // const result = new AgentArray()
-    // for (let i = 0; i < pRect.length; i++) {
-    //   const p = pRect[i]
-    //   const isIn = util.inCone(p.x, p.y, radius, coneAngle, direction, patch.x, patch.y)
-    //   if (isIn && (patch !== p || meToo)) result.push(p)
-    // }
-    // return result
-  }
-
-  // Return patch at distance and angle from obj's (patch or turtle)
-  // x, y (floats). If off world, return undefined.
-  // To use heading: patchAtDirectionAndDistance(obj, util.angle(heading), distance)
-  // Does not take into account the angle of the obj .. turtle.theta for example.
-  patchAtDirectionAndDistance (obj, angle, distance) {
-    let {x, y} = obj;
-    x = x + distance * Math.cos(angle);
-    y = y + distance * Math.sin(angle);
-    return this.patch(x, y)
-  }
-  // patchLeftAndAhead (dTheta, distance) {
-  //   return this.patchAtDirectionAndDistance(dTheta, distance)
-  // }
-  // patchRightAndAhead (dTheta, distance) {
-  //   return this.patchAtDirectionAndDistance(-dTheta, distance)
-  // }
-
-  // Diffuse the value of patch variable `p.v` by distributing `rate` percent
-  // of each patch's value of `v` to its neighbors.
-  // If a color map is given, scale the patch color via variable's value
-  // If the patch has less than 4/8 neighbors, return the extra to the patch.
-  diffuse (v, rate, colorMap = null, min = 0, max = 1) {
-    this.diffuseN(8, v, rate, colorMap, min, max);
-  }
-  diffuse4 (v, rate, colorMap = null, min = 0, max = 1) {
-    this.diffuseN(4, v, rate, colorMap, min, max);
-  }
-  diffuseN (n, v, rate, colorMap = null, min = 0, max = 1) {
-    // Note: for-of loops removed: chrome can't optimize them
-    // test/apps/patches.js 22fps -> 60fps
-    // zero temp variable if not yet set
-    if (this[0]._diffuseNext === undefined)
-      // for (const p of this) p._diffuseNext = 0
-      for (let i = 0; i < this.length; i++) this[i]._diffuseNext = 0;
-
-    // pass 1: calculate contribution of all patches to themselves and neighbors
-    // for (const p of this) {
-    for (let i = 0; i < this.length; i++) {
-      const p = this[i];
-      const dv = p[v] * rate;
-      const dvn = dv / n;
-      const neighbors = (n === 8) ? p.neighbors : p.neighbors4;
-      const nn = neighbors.length;
-      p._diffuseNext += p[v] - dv + (n - nn) * dvn;
-      // for (const n of neighbors) n._diffuseNext += dvn
-      for (let i = 0; i < neighbors.length; i++) neighbors[i]._diffuseNext += dvn;
-    }
-    // pass 2: set new value for all patches, zero temp,
-    // modify color if colorMap given
-    // for (const p of this) {
-    for (let i = 0; i < this.length; i++) {
-      const p = this[i];
-      p[v] = p._diffuseNext;
-      p._diffuseNext = 0;
-      if (colorMap)
-        p.setColor(colorMap.scaleColor(p[v], min, max));
-    }
-  }
+  // REMIND: Test that agentarray returned.
+  test () { console.log(this.map(link => link.id)); }
 }
+
+// import Color from './Color.js'
 
 // Class Patch instances represent a rectangle on a grid.  They hold variables
 // that are in the patches the turtles live on.  The set of all patches
@@ -2502,24 +2813,17 @@ class Patches extends AgentSet {
 // Here, the Patch class is given to Patches for use creating Proto objects
 // (new Patch(agentSet)), but only once per model/breed.
 // The flyweight Patch objects are created via Object.create(protoObject),
-// This lets the new Patch(agentset) obhect be "defaults".
-class Patch {
-  static defaultVariables () { // Core variables for patches. Not 'own' variables.
+// This lets the new Patch(agentset) object be "defaults".
+// https://medium.com/dailyjs/two-headed-es6-classes-fe369c50b24
+class Patch$2 {
+  static defaultVariables () { // Core variables for patches.
     return {
-      // id: null,             // unique id, promoted by agentset's add() method
-      // agentSet: null,       // my agentset/breed
-      // model: null,          // my model
-      // patches: null,        // my patches/baseSet, set by ctor
-
-      turtles: undefined,      // the turtles on me. Laxy evalued, see turtlesHere below
-      labelOffset: [0, 0],  // text pixel offset from the patch center
-      labelColor: Color.color(0, 0, 0) // the label color
-      // Getter variables: label, color, x, y, neighbors, neighbors4
+      turtles: undefined // the turtles on me. Lazy evalued, see turtlesHere
     }
   }
   // Initialize a Patch given its Patches AgentSet.
   constructor () {
-    Object.assign(this, Patch.defaultVariables());
+    Object.assign(this, Patch$2.defaultVariables());
   }
   // Getter for x,y derived from patch id, thus no setter.
   get x () {
@@ -2549,6 +2853,107 @@ class Patch {
     Object.defineProperty(this, 'neighbors4', {value: n, enumerable: true});
     return n
   }
+
+  // Promote this.turtles on first call to turtlesHere.
+  turtlesHere () {
+    if (this.turtles == null) {
+      this.patches.ask(p => { p.turtles = []; });
+      this.model.turtles.ask(t => { t.patch.turtles.push(t); });
+    }
+    return this.turtles
+  }
+  // Returns above but returning only turtles of this breed.
+  breedsHere (breed) {
+    const turtles = this.turtlesHere();
+    return turtles.withBreed(breed)
+  }
+
+  // 6 methods in both Patch & Turtle modules
+  // Distance from me to x, y. REMIND: No off-world test done
+  distanceXY (x, y) { return util.distance(this.x, this.y, x, y) }
+  // Return distance from me to object having an x,y pair (turtle, patch, ...)
+  distance (agent) { return this.distanceXY(agent.x, agent.y) }
+  // Return angle towards agent/x,y
+  // Use util.heading to convert to heading
+  towards (agent) { return this.towardsXY(agent.x, agent.y) }
+  towardsXY (x, y) { return util.radiansToward(this.x, this.y, x, y) }
+  // Return patch w/ given parameters. Return undefined if off-world.
+  // Return patch dx, dy from my position.
+  patchAt (dx, dy) { return this.patches.patch(this.x + dx, this.y + dy) }
+  patchAtDirectionAndDistance (direction, distance) {
+    return this.patches.patchAtDirectionAndDistance(this, direction, distance)
+  }
+
+  // Use the agentset versions so that breeds can be considered.
+  // Otherwise we'd have to use the patch breed just to be consistant.
+  // inRect (patch, dx, dy = dx, meToo = true) {
+  //   return this.patches.inRect(this, dx, dy, meToo)
+  // }
+  // inRadius (radius, meToo = true) { // radius is integer
+  //   return this.patches.inRadius(this, radius, meToo)
+  // }
+  // inCone (radius, coneAngle, direction, meToo = true) {
+  //   return this.patches.inRadius(this, radius, coneAngle, direction, meToo)
+  // }
+
+  sprout (num = 1, breed = this.model.turtles, initFcn = (turtle) => {}) {
+    const turtles = this.model.turtles;
+    return turtles.create(num, (turtle) => {
+      turtle.setxy(this.x, this.y);
+      if (breed !== turtles) turtle.setBreed(breed);
+      initFcn(turtle);
+    })
+    // return breed.create(num, (turtle) => {
+    //   turtle.setxy(this.x, this.y)
+    //   initFcn(turtle)
+    // })
+  }
+}
+
+// import util from './core/util.js'
+// Class Patch instances represent a rectangle on a grid.  They hold variables
+// that are in the patches the turtles live on.  The set of all patches
+// is the world on which the turtles live and the model runs.
+
+// Flyweight object creation:
+// Objects within AgentSets use "prototypal inheritance" via Object.create().
+// Here, the Patch class is given to Patches for use creating Proto objects
+// (new Patch(agentSet)), but only once per model/breed.
+// The flyweight Patch objects are created via Object.create(protoObject),
+// This lets the new Patch(agentset) object be "defaults".
+// https://medium.com/dailyjs/two-headed-es6-classes-fe369c50b24
+// class Patch {
+class Patch extends Patch$2 {
+  // No ctor, use super.
+
+  // // Getter for x,y derived from patch id, thus no setter.
+  // get x () {
+  //   return (this.id % this.model.world.numX) + this.model.world.minX
+  // }
+  // get y () {
+  //   return this.model.world.maxY - Math.floor(this.id / this.model.world.numX)
+  // }
+  // isOnEdge () {
+  //   const {x, y, model} = this
+  //   const {minX, maxX, minY, maxY} = model.world
+  //   return x === minX || x === maxX || y === minY || y === maxY
+  // }
+
+  // Getter for neighbors of this patch.
+  // Uses lazy evaluation to promote neighbors to instance variables.
+  // To avoid promotion, use `patches.neighbors(this)`.
+  // Promotion makes getters accessed only once.
+  // defineProperty required: can't set this.neighbors when getter defined.
+  // get neighbors () { // lazy promote neighbors from getter to instance prop.
+  //   const n = this.patches.neighbors(this)
+  //   Object.defineProperty(this, 'neighbors', {value: n, enumerable: true})
+  //   return n
+  // }
+  // get neighbors4 () {
+  //   const n = this.patches.neighbors4(this)
+  //   Object.defineProperty(this, 'neighbors4', {value: n, enumerable: true})
+  //   return n
+  // }
   // Similar for caching turtles here
   // get turtles () {
   //   Object.defineProperty(this, 'turtles', {value: [], enumerable: true})
@@ -2583,75 +2988,75 @@ class Patch {
   // get label () { return this.getLabel() }
   // set label (label) { return this.setLabel(label) }
 
-  // Promote this.turtles on first call to turtlesHere.
-  turtlesHere () {
-    if (this.turtles == null) {
-      // this.patches.forEach((patch) => { patch.turtles = [] })
-      // this.model.turtles.forEach((turtle) => {
-      //   turtle.patch.turtles.push(this)
-      // })
-      this.patches.ask(p => { p.turtles = []; });
-      this.model.turtles.ask(t => { t.patch.turtles.push(t); });
-
-      // for (const patch of this.patches)
-      //   patch.turtles = []
-      // for (const turtle of this.model.turtles)
-      //   turtle.patch.turtles.push(turtle)
-    }
-    return this.turtles
-  }
-  // Returns above but returning only turtles of this breed.
-  breedsHere (breed) {
-    const turtles = this.turtlesHere();
-    return turtles.withBreed(breed)
-    // return turtles.filter((turtle) => turtle.agentSet === breed)
-  }
-
-  // 6 methods in both Patch & Turtle modules
-  // Distance from me to x, y. REMIND: No off-world test done
-  distanceXY (x, y) { return util.distance(this.x, this.y, x, y) }
-  // Return distance from me to object having an x,y pair (turtle, patch, ...)
-  distance (agent) { return this.distanceXY(agent.x, agent.y) }
-  // Return angle towards agent/x,y
-  // Use util.heading to convert to heading
-  towards (agent) { return this.towardsXY(agent.x, agent.y) }
-  towardsXY (x, y) { return util.radiansToward(this.x, this.y, x, y) }
-  // Return patch w/ given parameters. Return undefined if off-world.
-  // Return patch dx, dy from my position.
-  patchAt (dx, dy) { return this.patches.patch(this.x + dx, this.y + dy) }
-  patchAtDirectionAndDistance (direction, distance) {
-    return this.patches.patchAtDirectionAndDistance(this, direction, distance)
-  }
-
-  // Use the agentset versions so that breeds can considered.
-  // Otherwise we'd have to use the patch breed just to be consistant.
-  // inRect (patch, dx, dy = dx, meToo = true) {
-  //   return this.patches.inRect(this, dx, dy, meToo)
+  // // Promote this.turtles on first call to turtlesHere.
+  // turtlesHere () {
+  //   if (this.turtles == null) {
+  //     // this.patches.forEach((patch) => { patch.turtles = [] })
+  //     // this.model.turtles.forEach((turtle) => {
+  //     //   turtle.patch.turtles.push(this)
+  //     // })
+  //     this.patches.ask(p => { p.turtles = [] })
+  //     this.model.turtles.ask(t => { t.patch.turtles.push(t) })
+  //
+  //     // for (const patch of this.patches)
+  //     //   patch.turtles = []
+  //     // for (const turtle of this.model.turtles)
+  //     //   turtle.patch.turtles.push(turtle)
+  //   }
+  //   return this.turtles
   // }
-  // inRadius (radius, meToo = true) { // radius is integer
-  //   return this.patches.inRadius(this, radius, meToo)
+  // // Returns above but returning only turtles of this breed.
+  // breedsHere (breed) {
+  //   const turtles = this.turtlesHere()
+  //   return turtles.withBreed(breed)
+  //   // return turtles.filter((turtle) => turtle.agentSet === breed)
   // }
-  // inCone (radius, coneAngle, direction, meToo = true) {
-  //   return this.patches.inRadius(this, radius, coneAngle, direction, meToo)
+  //
+  // // 6 methods in both Patch & Turtle modules
+  // // Distance from me to x, y. REMIND: No off-world test done
+  // distanceXY (x, y) { return util.distance(this.x, this.y, x, y) }
+  // // Return distance from me to object having an x,y pair (turtle, patch, ...)
+  // distance (agent) { return this.distanceXY(agent.x, agent.y) }
+  // // Return angle towards agent/x,y
+  // // Use util.heading to convert to heading
+  // towards (agent) { return this.towardsXY(agent.x, agent.y) }
+  // towardsXY (x, y) { return util.radiansToward(this.x, this.y, x, y) }
+  // // Return patch w/ given parameters. Return undefined if off-world.
+  // // Return patch dx, dy from my position.
+  // patchAt (dx, dy) { return this.patches.patch(this.x + dx, this.y + dy) }
+  // patchAtDirectionAndDistance (direction, distance) {
+  //   return this.patches.patchAtDirectionAndDistance(this, direction, distance)
   // }
-
-  // Breed get/set mathods and getter/setter versions.
-  // setBreed (breed) { breed.setBreed(this) }
-  // get breed () { return this.agentSet }
-  // isBreed (name) { return this.agentSet.name === name }
-
-  sprout (num = 1, breed = this.model.turtles, initFcn = (turtle) => {}) {
-    const turtles = this.model.turtles;
-    return turtles.create(num, (turtle) => {
-      turtle.setxy(this.x, this.y);
-      if (breed !== turtles) turtle.setBreed(breed);
-      initFcn(turtle);
-    })
-    // return breed.create(num, (turtle) => {
-    //   turtle.setxy(this.x, this.y)
-    //   initFcn(turtle)
-    // })
-  }
+  //
+  // // Use the agentset versions so that breeds can considered.
+  // // Otherwise we'd have to use the patch breed just to be consistant.
+  // // inRect (patch, dx, dy = dx, meToo = true) {
+  // //   return this.patches.inRect(this, dx, dy, meToo)
+  // // }
+  // // inRadius (radius, meToo = true) { // radius is integer
+  // //   return this.patches.inRadius(this, radius, meToo)
+  // // }
+  // // inCone (radius, coneAngle, direction, meToo = true) {
+  // //   return this.patches.inRadius(this, radius, coneAngle, direction, meToo)
+  // // }
+  //
+  // // Breed get/set mathods and getter/setter versions.
+  // // setBreed (breed) { breed.setBreed(this) }
+  // // get breed () { return this.agentSet }
+  // // isBreed (name) { return this.agentSet.name === name }
+  //
+  // sprout (num = 1, breed = this.model.turtles, initFcn = (turtle) => {}) {
+  //   const turtles = this.model.turtles
+  //   return turtles.create(num, (turtle) => {
+  //     turtle.setxy(this.x, this.y)
+  //     if (breed !== turtles) turtle.setBreed(breed)
+  //     initFcn(turtle)
+  //   })
+  //   // return breed.create(num, (turtle) => {
+  //   //   turtle.setxy(this.x, this.y)
+  //   //   initFcn(turtle)
+  //   // })
+  // }
 }
 
 // Turtles are the world other agentsets live on. They create a coord system
