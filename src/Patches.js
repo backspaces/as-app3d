@@ -381,7 +381,7 @@ class Patches extends CorePatches {
   }
 
   // REMIND: Test that agentarray returned.
-  test () { console.log(this.map(link => link.id)) }
+  test () { console.log(this.map(patch => patch.id)) }
 }
 
 export default Patches

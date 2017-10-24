@@ -1,6 +1,6 @@
 import util from './core/util.js'
-import CoreLink from './core/Link.js'
 import Color from './Color.js'
+import CoreLink from './core/Link.js'
 
 // Flyweight object creation, see Patch/Patches.
 
