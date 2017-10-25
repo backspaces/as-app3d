@@ -4468,11 +4468,67 @@ class ThreeView {
 
 // Class Model is the primary interface for modelers, integrating
 // all the parts of a model. It also contains NetLogo's `observer` methods.
-class Model {
-  // Static class methods for default settings.
-  // Default world is centered, patchSize = 13, min/max = 16
+class Model$2 {
+  // Static class method for default setting.
+  // Default world is centered, min/max = 16
   static defaultWorld (maxX = 16, maxY = maxX) {
     return World.defaultOptions(maxX, maxY)
+  }
+
+  // The Model constructor takes a World object.
+  constructor (worldOptions = Model$2.defaultWorld()) {
+    this.worldOptions = worldOptions;
+    this.resetModel(); // REMIND: Temporary. Inline?
+  }
+  initAgentSet (name, AgentsetClass, AgentClass) {
+    const agentset = new AgentsetClass(this, AgentClass, name);
+    this[name] = agentset;
+  }
+  resetModel () {
+    this.world = new World(this.worldOptions);
+    // Base AgentSets setup here. Breeds handled by setup
+    this.initAgentSet('patches', Patches$2, Patch$2);
+    this.initAgentSet('turtles', Turtles$2, Turtle$2);
+    this.initAgentSet('links', Links$2, Link$2);
+  }
+  reset () {
+    this.resetModel();
+  }
+
+// ### User Model Creation
+  // A user's model is made by subclassing Model and over-riding these
+  // 2 abstract methods. `super` need not be called.
+
+  setup () {} // Your initialization code goes here
+  // Update/step your model here
+  step () {} // called each step of the model
+
+  // Breeds: create breeds/subarrays of Patches, Agents, Links
+  patchBreeds (breedNames) {
+    for (const breedName of breedNames.split(' ')) {
+      this[breedName] = this.patches.newBreed(breedName);
+    }
+  }
+  turtleBreeds (breedNames) {
+    for (const breedName of breedNames.split(' ')) {
+      this[breedName] = this.turtles.newBreed(breedName);
+    }
+  }
+  linkBreeds (breedNames) {
+    for (const breedName of breedNames.split(' ')) {
+      this[breedName] = this.links.newBreed(breedName);
+    }
+  }
+}
+
+// Class Model is the primary interface for modelers, integrating
+// all the parts of a model. It also contains NetLogo's `observer` methods.
+// class Model {
+class Model extends Model$2 {
+  // Static class methods for default settings.
+  // Default world is centered, patchSize = 13, min/max = 16
+  static defaultWorld (maxX, maxY) {
+    return super.defaultWorld(maxX, maxY)
   }
   // Default renderer is ThreeView.js
   static defaultRenderer () {
@@ -4487,12 +4543,13 @@ class Model {
   constructor (div = document.body,
                worldOptions = Model.defaultWorld(),
                rendererOptions = Model.defaultRenderer()) {
-    // Store and initialize the model's div and contexts.
+    // Super ctor sets worldOptions, world, patches, turtles, links
+    // Tricky: dependes on resetModel duplicated in this name space.
+    super(worldOptions);
     this.div = util.isString(div) ? document.getElementById(div) : div;
-    // Create this model's `world` object
-    this.world = new World(worldOptions);
-    // Create animator to handle draw/step.
+    this.renderOptions = rendererOptions;
     this.anim = new Animator(this);
+
     // Default colormap. Change this to another if you'd prefer.
     this.colorMap = ColorMap.Basic16;
 
@@ -4519,7 +4576,7 @@ class Model {
     //   // this.reset(); this.setup(); this.modelReady = true
     //   this.reset(); this.modelReady = true
     // })
-    this.reset(); // REMIND: Temporary
+    this.resetView(); // REMIND: Temporary
   }
   // Call fcn(this) when any async
   // whenReady (fcn) {
@@ -4552,11 +4609,28 @@ class Model {
   //   agentSet.isMonochrome = mesh.isMonochrome()
   //   agentSet.useSprites = mesh.useSprites()
   // }
-  initAgentSet (name, AgentsetClass, AgentClass) {
-    const agentset = new AgentsetClass(this, AgentClass, name);
-    const mesh = this.meshes[name];
+  // initAgentSet (name, AgentsetClass, AgentClass) {
+  //   const agentset = new AgentsetClass(this, AgentClass, name)
+  //   const mesh = this.meshes[name]
+  //   // const meshName = mesh.constructor.name
+  //   this[name] = agentset
+  //   // agentset.setDefault('renderer', mesh)
+  //   agentset.renderer = mesh
+  //   if (mesh.fixedColor) agentset.setDefault('color', mesh.fixedColor)
+  //   // REMIND: Turtles only?
+  //   if (mesh.fixedShape) agentset.setDefault('shape', mesh.fixedShape)
+  //   // this.agentset.fixedColor = agentset.renderer.options.color
+  //   // agentset.useSprites = meshName in ['PointSpritesMesh', 'QuadSpritesMesh']
+  //   // agentset.fixedColor = agentset.renderer.options.color
+  //   // agentset.useSprites = meshName in ['PointSpritesMesh', 'QuadSpritesMesh']
+  //   // agentset.fixedShape =
+  //   mesh.init(agentset)
+  // }
+  initAgentRenderer (agentset) {
+    // const agentset = new AgentsetClass(this, AgentClass, name)
+    const mesh = this.meshes[agentset.name];
     // const meshName = mesh.constructor.name
-    this[name] = agentset;
+    // this[name] = agentset
     // agentset.setDefault('renderer', mesh)
     agentset.renderer = mesh;
     if (mesh.fixedColor) agentset.setDefault('color', mesh.fixedColor);
@@ -4569,16 +4643,24 @@ class Model {
     // agentset.fixedShape =
     mesh.init(agentset);
   }
-  reset (restart = false) {
-    this.anim.reset();
-    this.world.setWorld(); // allow world to change?
-
-    this.refreshLinks = this.refreshTurtles = this.refreshPatches = true;
-
-    // Breeds handled by setup
+  // Duplicate core.resetModel. Called by core's ctor.
+  // Can't use core's because imported Patches etc, are view versions
+  // thus need to be in this module's scope. A bit odd.
+  resetModel () {
+    this.world = new World(this.worldOptions);
+    // Base AgentSets setup here. Breeds handled by setup
     this.initAgentSet('patches', Patches, Patch);
     this.initAgentSet('turtles', Turtles, Turtle);
     this.initAgentSet('links', Links, Link);
+  }
+  resetView () {
+    this.anim.reset();
+    this.refreshLinks = this.refreshTurtles = this.refreshPatches = true;
+
+    // Breeds handled by setup
+    this.initAgentRenderer(this.patches);
+    this.initAgentRenderer(this.turtles);
+    this.initAgentRenderer(this.links);
     // this.patches = new Patches(this, Patch, 'patches')
     // this.patches.renderer = this.meshes.patches
     // this.meshes.patches.init(this.patches)
@@ -4595,18 +4677,23 @@ class Model {
     // this.setAgentSetViewProps(this.links, this.meshes.links)
 
     // this.setup()
-    if (restart) this.start();
+    // if (restart) this.start()
+  }
+  reset () {
+    this.resetModel();
+    this.resetView();
   }
 
   randomColor () { return this.colorMap.randomColor() }
 
 // ### User Model Creation
-  // A user's model is made by subclassing Model and over-riding these
-  // 3 abstract methods. `super` need not be called.
+  // A user's model is made by subclassing Model and over-riding
+  // 2 CoreAS abstract methods: setup, step.
+  // start, stop, once required: CoreAS has no animator.
 
-  setup () {} // Your initialization code goes here
-  // Update/step your model here
-  step () {} // called each step of the animation
+  // setup () {} // Your initialization code goes here
+  // // Update/step your model here
+  // step () {} // called each step of the animation
 
   // Start/stop the animation. Return model for chaining.
   start () {
@@ -4652,21 +4739,23 @@ class Model {
   }
 
   // Breeds: create breeds/subarrays of Patches, Agents, Links
-  patchBreeds (breedNames) {
-    for (const breedName of breedNames.split(' ')) {
-      this[breedName] = this.patches.newBreed(breedName);
-    }
-  }
-  turtleBreeds (breedNames) {
-    for (const breedName of breedNames.split(' ')) {
-      this[breedName] = this.turtles.newBreed(breedName);
-    }
-  }
-  linkBreeds (breedNames) {
-    for (const breedName of breedNames.split(' ')) {
-      this[breedName] = this.links.newBreed(breedName);
-    }
-  }
+  // Unlike resetModel(), it can use CoreAS's; the baseSets
+  // have used this module's Patch, Patches, ...
+  // patchBreeds (breedNames) {
+  //   for (const breedName of breedNames.split(' ')) {
+  //     this[breedName] = this.patches.newBreed(breedName)
+  //   }
+  // }
+  // turtleBreeds (breedNames) {
+  //   for (const breedName of breedNames.split(' ')) {
+  //     this[breedName] = this.turtles.newBreed(breedName)
+  //   }
+  // }
+  // linkBreeds (breedNames) {
+  //   for (const breedName of breedNames.split(' ')) {
+  //     this[breedName] = this.links.newBreed(breedName)
+  //   }
+  // }
 }
 
 class RGBDataSet extends DataSet {
