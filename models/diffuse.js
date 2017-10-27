@@ -1,10 +1,9 @@
 import ColorMap from '../src/ColorMap.js'
-import DataSet from '../src/core/DataSet.js'
 import Model from '../src/Model.js'
 import util from '../src/core/util.js'
-// import {ColorMap, DataSet, Model, util} from '../dist/AS.module.js'
+// import {ColorMap, Model, util} from '../dist/AS.module.js'
 
-util.toWindow({ ColorMap, DataSet, Model, util })
+util.toWindow({ ColorMap, Model, util })
 
 class DiffuseModel extends Model {
   setup () {
