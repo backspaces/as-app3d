@@ -24,7 +24,8 @@ class Turtles extends CoreTurtles {
     return util.repeat(num, (i, a) => {
       const turtle = this.addAgent()
       turtle.theta = util.randomFloat(Math.PI * 2)
-      if (this.model.turtles.renderer.useSprites) // fake sprite for initialization
+      // if (this.model.turtles.renderer.useSprites) // fake sprite for initialization
+      if (this.baseSet.renderer.useSprites) // fake sprite for initialization
         turtle.sprite = {
           shape: turtle.shapeFcn,
           color: this.model.randomColor(),

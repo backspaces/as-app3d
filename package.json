@@ -61,7 +61,8 @@
     "build-docs": "cp -Rp `bin/pkgkey.js docsfiles` docs",
     "build-core": "cp node_modules/coreas/src/*js src/core",
     "minify": "squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js",
-    "build-dist": "rollup -c"
+    "build-dist": "rollup -c",
+    "help": "npm run && rollup && squash"
   },
   "dependencies": {
     "CoreAS": "backspaces/CoreAS",
