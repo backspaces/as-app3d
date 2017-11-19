@@ -12,20 +12,38 @@ const UI = {
   Population: 0.20, // 0.75 // percent of inside populated
   NeighborType: 'neighbors',
   StartAt: 'closest',
-  Reset: () => { model.reset(); model.setup(); model.start() },
+  Reset: () => {
+    model.reset(); model.setup(); model.start(); model.resets++
+  },
   UseFlood: !true,
   ToggleView: toggleView,
+  TurtleSize: 1.5,
   FPS: 30
 }
 let currentFlood = 0
 function toggleView () {
+  // currentFlood = util.mod(currentFlood++, UI.NumExits)
   if (currentFlood === UI.NumExits) {
-    model.showPatchColors()
     currentFlood = 0
   } else {
-    model.showFlood(model.exits[currentFlood++])
+    currentFlood++
   }
+  showInside()
+  // if (currentFlood === UI.NumExits) {
+  //   model.showPatchColors()
+  //   currentFlood = 0
+  // } else {
+  //   model.showFlood(model.exits[currentFlood++])
+  // }
 }
+function showInside () {
+  if (currentFlood === 0)
+    model.showPatchColors()
+  else
+    model.showFlood(model.exits[currentFlood - 1])
+}
+function setRate () { model.anim.setRate(UI.FPS) }
+function setSize () { model.turtles.setDefault('size', UI.TurtleSize) }
 
 util.toWindow({ UI })
 
@@ -41,16 +59,20 @@ class ExitModel extends Model {
     this.gui.add(UI, 'Reset')
     // this.gui.add(UI, 'ToggleView')
     this.gui.add(UI, 'ToggleView')
-    this.gui.add(UI, 'UseFlood').onChange(() => { model.done = false })
-    this.gui.add(UI, 'FPS', 1, 60).step(1).onChange(() => { model.setRate() })
+    this.gui.add(UI, 'UseFlood')
+    this.gui.add(UI, 'TurtleSize', 1, 4).step(0.5).onChange(setSize)
+    this.gui.add(UI, 'FPS', 1, 60).step(1).onChange(setRate)
+
+    this.numMoves = 0
+    this.resets = 0
   }
-  setRate () { this.anim.setRate(UI.FPS) }
   setup () {
     this.patchBreeds('exits inside wall obstacles')
     this.turtles.setDefault('shape', 'circle')
-    this.turtles.setDefault('size', 1.5)
+    // this.turtles.setDefault('size', UI.TurtleSize)
     this.turtles.setDefault('atEdge', (turtle) => turtle.die())
-    this.setRate()
+    setRate()
+    setSize()
     this.setupPatches()
     this.setupTurtles()
 
@@ -97,6 +119,7 @@ class ExitModel extends Model {
     })
     console.log('fixed unreachable:', this.obstacles.length - b4)
     this.showPatchColors()
+    showInside()
   }
   showPatchColors () {
     const grays = ColorMap.LightGray
@@ -117,10 +140,11 @@ class ExitModel extends Model {
     const turtlePatches = this.inside.nOf(UI.Population * this.inside.length)
     turtlePatches.ask(p => {
       p.sprout(1, this.turtles, (t) => {
-        if (UI.StartAt === 'closest')
+        if (UI.StartAt === 'closest') {
           t.exit = this.exits.minOneOf(e => t.distance(e))
-        else
+        } else {
           t.exit = this.exits.oneOf()
+        }
         t.sprite = t.exit.turtleSprite
       })
     })
@@ -147,7 +171,7 @@ class ExitModel extends Model {
   showFlood (exit) {
     const flood = exit.floodVar
     const max = this.inside.maxOneOf(flood)[flood]
-    const cmap = ColorMap.Jet // or Basic16
+    const cmap = ColorMap.Basic16 // Jet or Basic16
     this.inside.ask(p => {
       p.color = cmap.scaleColor(p[flood], 0, max)
     })
@@ -174,9 +198,9 @@ class ExitModel extends Model {
     }
     return null
   }
+
   step () {
-    // if (this.done) return
-    let numMoves = 0
+    this.numMoves = 0
     this.turtles.ask(t => {
       if (t.patch.breed === this.inside) {
         const available = this.availableNeighbors(t)
@@ -184,16 +208,17 @@ class ExitModel extends Model {
         if (best) {
           t.face(best)
           t.setxy(best.x, best.y)
-          numMoves++
+          this.numMoves++
         }
       } else {
         t.forward(1)
-        numMoves++
+        this.numMoves++
       }
     })
-    if (numMoves === 0) {
-      // this.done = true
-      util.logOnce(`No moves: turtles = ${this.turtles.length}`)
+    if (this.numMoves === 0) {
+      util.logOnce(
+        `${this.resets} - No moves: turtles = ${this.turtles.length}`
+      )
     }
   }
 }

@@ -51,8 +51,7 @@
     "docs/src",
     "docs/dist",
     "docs/models",
-    "libs",
-    "models/scripts"
+    "libs"
   ],
   "scripts": {
     "clean": "rm -rf `bin/pkgkey.js mkdirs` && mkdir `bin/pkgkey.js mkdirs`",
