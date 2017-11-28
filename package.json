@@ -64,12 +64,12 @@
     "help": "npm run && rollup && squash"
   },
   "dependencies": {
-    "CoreAS": "backspaces/CoreAS",
     "dat.gui": "dataarts/dat.gui",
     "stats.js": "^0.17.0",
     "three": "latest"
   },
   "devDependencies": {
+    "CoreAS": "backspaces/CoreAS",
     "butternut": "^0.4.6",
     "rollup": "latest",
     "sane": "^1.6.0"
