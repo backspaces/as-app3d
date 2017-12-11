@@ -60,16 +60,15 @@
     "build-docs": "cp -Rp `bin/pkgkey.js docsfiles` docs",
     "build-core": "cp node_modules/coreas/src/*js src/core",
     "minify": "squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js",
-    "build-dist": "rollup -c",
-    "help": "npm run && rollup && squash"
+    "build-dist": "rollup -c"
   },
   "dependencies": {
-    "dat.gui": "dataarts/dat.gui",
+    "coreas": "github:backspaces/CoreAS",
+    "dat.gui": "^0.6.5",
     "stats.js": "^0.17.0",
     "three": "latest"
   },
   "devDependencies": {
-    "CoreAS": "backspaces/CoreAS",
     "butternut": "^0.4.6",
     "rollup": "latest",
     "sane": "^1.6.0"

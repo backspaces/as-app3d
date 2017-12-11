@@ -23,15 +23,18 @@ class Turtles extends CoreTurtles {
   create (num = 1, initFcn = (turtle) => {}) {
     return util.repeat(num, (i, a) => {
       const turtle = this.addAgent()
-      turtle.theta = util.randomFloat(Math.PI * 2)
+      turtle.theta = util.randomFloat(Math.PI * 2) // REMIND: not if default exists
       // if (this.model.turtles.renderer.useSprites) // fake sprite for initialization
-      if (this.baseSet.renderer.useSprites) // fake sprite for initialization
-        turtle.sprite = {
-          shape: turtle.shapeFcn,
-          color: this.model.randomColor(),
-          needsUpdate: true
-        }
+      // if (this.baseSet.renderer.useSprites) // fake sprite for initialization
+      //   turtle.sprite = {
+      //     // src: turtle.shapeFcn,
+      //     // color: this.model.randomColor(),
+      //     src: turtle.shape,
+      //     color: turtle.color,
+      //     needsUpdate: true
+      //   }
       initFcn(turtle)
+      if (!turtle.color) turtle.color = this.model.randomColor()
       a.push(turtle) // Return array of new agents. REMIND: should be agentarray?
     })
   }

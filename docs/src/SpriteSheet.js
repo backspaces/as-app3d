@@ -50,7 +50,8 @@ class SpriteSheet {
     const sprite = util.isImageable(src)
       ? this.addImage(src)
       : this.addDrawing(src, color, strokeColor)
-    Object.assign(sprite, {src, color, strokeColor, needsUpdate: false})
+    Object.assign(sprite, {src, color, strokeColor})
+    // Object.assign(sprite, {src, color, strokeColor, needsUpdate: false})
 
     // Add normalized colors and shape name to new sprite.
     // if (color) {
@@ -66,7 +67,8 @@ class SpriteSheet {
 
   // Install a new named function in the paths object below.
   // Used to add "car", "thug", "spider" etc drawings.
-  installDrawing (fcn, name = fcn.name) { this.paths[name] = fcn }
+  // installDrawing (fcn, name = fcn.name) { this.paths[name] = fcn }
+  installDrawFcn (fcn, name = fcn.name) { this.paths[name] = fcn }
 
 // These are internal, experts only, use newSprite above for normal use.
 

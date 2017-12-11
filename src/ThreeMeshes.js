@@ -180,7 +180,8 @@ export class QuadSpritesMesh extends BaseMesh {
 
     for (let i = 0; i < turtles.length; i++) {
       const turtle = turtles[i]
-      if (turtle.sprite.needsUpdate) turtle.setSprite()
+      // if (turtle.sprite.needsUpdate) turtle.setSprite()
+      if (!turtle.sprite) turtle.setSprite()
       const size = turtle.size // * patchSize
       const theta = turtle.theta
       const cos = Math.cos(theta)

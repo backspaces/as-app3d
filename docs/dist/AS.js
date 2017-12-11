@@ -3155,15 +3155,18 @@ class Turtles extends Turtles$2 {
   create (num = 1, initFcn = (turtle) => {}) {
     return util.repeat(num, (i, a) => {
       const turtle = this.addAgent();
-      turtle.theta = util.randomFloat(Math.PI * 2);
+      turtle.theta = util.randomFloat(Math.PI * 2); // REMIND: not if default exists
       // if (this.model.turtles.renderer.useSprites) // fake sprite for initialization
-      if (this.baseSet.renderer.useSprites) // fake sprite for initialization
-        turtle.sprite = {
-          shape: turtle.shapeFcn,
-          color: this.model.randomColor(),
-          needsUpdate: true
-        };
+      // if (this.baseSet.renderer.useSprites) // fake sprite for initialization
+      //   turtle.sprite = {
+      //     // src: turtle.shapeFcn,
+      //     // color: this.model.randomColor(),
+      //     src: turtle.shape,
+      //     color: turtle.color,
+      //     needsUpdate: true
+      //   }
       initFcn(turtle);
+      if (!turtle.color) turtle.color = this.model.randomColor();
       a.push(turtle); // Return array of new agents. REMIND: should be agentarray?
     })
   }
@@ -3438,91 +3441,60 @@ class Turtle extends Turtle$2 {
     super();
     Object.assign(this, Turtle.defaultVariables());
   }
-// die () {
-//   this.agentSet.removeAgent(this) // remove me from my baseSet and breed
-//   if (this.hasOwnProperty('links')) // don't promote links
-//     while (this.links.length > 0) this.links[0].die()
-//   if (this.patch.turtles != null)
-//     util.removeArrayItem(this.patch.turtles, this)
-//     // util.removeItem(this.patch.turtles, this)
-// }
-// // // Breed get/set mathods.
-// // setBreed (breed) { breed.setBreed(this) }
-// // get breed () { return this.agentSet }
-//
-// // Factory: create num new turtles at this turtle's location. The optional init
-// // proc is called on the new turtle after inserting in its agentSet.
-// hatch (num = 1, breed = this.agentSet, init = (turtle) => {}) {
-//   return this.turtles.create(num, (turtle) => {
-//     turtle.setxy(this.x, this.y)
-//     // turtle.color = this.color // REMIND: sprite vs color
-//     // hatched turtle inherits parents' ownVariables
-//     for (const key of breed.ownVariables) {
-//       if (turtle[key] == null) turtle[key] = this[key]
-//     }
-//     if (breed !== this.turtles) turtle.setBreed(breed)
-//     init(turtle)
-//   })
-//   // return agentSet.create(num, (turtle) => {
-//   //   turtle.setxy(this.x, this.y)
-//   //   // turtle.color = this.color // REMIND: sprite vs color
-//   //   // hatched turtle inherits parents' ownVariables
-//   //   for (const key of agentSet.ownVariables) {
-//   //     if (turtle[key] == null) turtle[key] = this[key]
-//   //   }
-//   //   init(turtle)
-//   // })
-// }
-// // Getter for links for this turtle. REMIND: use new AgentSet(0)?
-// // Uses lazy evaluation to promote links to instance variables.
-// // REMIND: Let links create the array as needed, less "tricky"
-// get links () { // lazy promote links from getter to instance prop.
-//   Object.defineProperty(this, 'links', {
-//     value: [],
-//     enumerable: true
-//   })
-//   return this.links
-// }
-// // Getter for the patchs and the patch I'm on. Return null if off-world.
-// get patch () { return this.model.patches.patch(this.x, this.y) }
-// // get patches () { return this.model.patches }
-//
-// // Heading vs Euclidean Angles. Direction for clarity when ambiguity.
-// get heading () { return util.heading(this.theta) }
-// set heading (heading) { this.theta = util.angle(heading) }
-// get direction () { return this.theta }
-// set direction (theta) { this.theta = theta }
-//
-// // setColor (anyColor) { this.color = Color.toColor(anyColor) }
-// // getColor () {
-// //   if (this.color) return
-// //   return this.color || this.sprite
-// // }
 
   // Create my sprite via shape: sprite, fcn, string, or image/canvas
-  setSprite (shape = this.shape, color = this.color, strokeColor = this.strokeColor) {
-    if (shape.sheet) { this.sprite = shape; return } // src is a sprite
-    const ss = this.model.spriteSheet;
-    // color = color || this.turtles.randomColor()
-    color = color || this.model.randomColor();
-    this.sprite = ss.newSprite(shape, color, strokeColor);
+  // setSprite (shape = this.shape, color = this.color, strokeColor = this.strokeColor) {
+  setSprite (sprite = null) {
+    if (sprite) {
+      this.sprite = sprite;
+    } else {
+      let {shape, color, strokeColor} = this;
+      // const needsStroke = shape.charAt(shape.length - 1) === '2'
+      const needsStroke = shape.slice(-1) === '2';
+      // if (shape.sheet) { this.sprite = shape; return } // src is a sprite
+      // const ss = this.model.spriteSheet
+      // color = color || this.turtles.randomColor()
+      shape = shape || 'default';
+      color = color || this.model.randomColor();
+      strokeColor = needsStroke
+        ? strokeColor || this.model.randomColor()
+        : null;
+      this.sprite = this.model.spriteSheet.newSprite(shape, color, strokeColor);
+    }
+    return this.sprite
+  }
+  checkSprite () {
+    if (!this.turtles.renderer.useSprites) return
+    if (this.turtles.settingDefault(this)) {
+      const {shape, typedColor: color, typedStrokeColor: strokeColor} = this;
+      const needsStroke = shape.slice(-1) === '2';
+      const ready = shape && color && (!needsStroke || strokeColor);
+      // const ready = shape && color && (needsStroke && strokeColor)
+      if (ready)
+        this.sprite = this.model.spriteSheet.newSprite(shape, color, strokeColor);
+    } else {
+      this.sprite = null;
+    }
   }
   setSize (size) { this.size = size; } // * this.model.world.patchSize }
 
   setColor (color) {
-    // if (this.turtles.settingDefault(this)) console.log(`setting default color ${color}`)
+    // if (this.turtles.settingDefault(this))
+    //   console.log(`setting default color ${color}`)
     // if (!this.id) console.log(`setting default color ${color}`)
     const typedColor = Color.toColor(color); // Convert to Color.color
-    const fixedColor = this.turtles.renderer.fixedColor; // Model set to Color.color
-    if (fixedColor && !typedColor.equals(fixedColor)) {
-      util.warn(`turtle.setColor: fixedColor != color ${fixedColor.toString()}`);
+    const fixedColor = this.turtles.renderer.fixedColor; // Is a Color.color
+    // if (fixedColor && !typedColor.equals(fixedColor)) {
+    if (fixedColor) {
+      util.warn(`turtle.setColor: fixedColor ${fixedColor.toString()}`);
     // } else if (this.sprite && !settingDefault) {
-    } else if (this.sprite) { // default sprite should always be null
-      this.sprite.color = typedColor;
-      this.sprite.needsUpdate = true;
+    // } else if (this.sprite) { // default sprite should always be null
+    //   this.sprite.color = typedColor
+    //   this.sprite.needsUpdate = true
     } else { // will set default color or instance color (if not fixed etc)
       this.typedColor = typedColor;
     }
+    this.checkSprite();
   }
   getColor () { return this.sprite ? this.sprite.color : this.typedColor }
   set color (color) { this.setColor(color); }
@@ -3533,12 +3505,13 @@ class Turtle extends Turtle$2 {
     const fixedColor = this.turtles.renderer.fixedColor; // Model set to Color.color
     if (fixedColor) {
       util.warn(`turtle.setStrokeColor: fixedColor ${fixedColor.toString()}`);
-    } else if (this.sprite) { // default sprite should always be null
-      this.sprite.strokeColor = typedColor;
-      this.sprite.needsUpdate = true;
+    // } else if (this.sprite) { // default sprite should always be null
+    //   this.sprite.strokeColor = typedColor
+    //   this.sprite.needsUpdate = true
     } else { // will set default color or instance color
       this.typedStrokeColor = typedColor;
     }
+    this.checkSprite();
   }
   getStrokeColor () {
     return this.sprite ? this.sprite.strokeColor : this.typedStrokeColor
@@ -3548,138 +3521,19 @@ class Turtle extends Turtle$2 {
 
   setShape (shape) {
     const fixedShape = this.turtles.renderer.fixedShape;
-    if (fixedShape && fixedShape !== shape) {
+    if (fixedShape) {
       util.warn(`turtle.setShape: fixedShape ${fixedShape}`);
-    } else if (this.sprite) {
-      this.sprite.shape = shape;
-      this.sprite.needsUpdate = true;
+    // } else if (this.sprite) {
+    //   this.sprite.src = shape
+    //   this.sprite.needsUpdate = true
     } else {
       this.shapeFcn = shape;
     }
+    this.checkSprite();
   }
-  getShape () { return this.sprite ? this.sprite.shape : this.shapeFcn }
+  getShape () { return this.sprite ? this.sprite.src : this.shapeFcn }
   set shape (shape) { this.setShape(shape); }
   get shape () { return this.getShape() }
-
-  // setDrawSprite (fcn, color, color2) {
-  //   this.sprite = this.model.spriteSheet.addDrawing(fcn, color)
-  // }
-
-// // Set x, y position. If z given, override default z.
-// // Call handleEdge(x, y) if x, y off-world.
-// setxy (x, y, z = null) {
-//   const p0 = this.patch
-//   if (z != null) this.z = z // don't promote z if null, use default z instead.
-//   if (this.model.world.isOnWorld(x, y)) {
-//     this.x = x
-//     this.y = y
-//   } else {
-//     this.handleEdge(x, y)
-//     // const {minXcor, maxXcor, minYcor, maxYcor} = this.model.world
-//     // if (this.wrap) {
-//     //   this.x = util.wrap(x, minXcor, maxXcor)
-//     //   this.y = util.wrap(y, minYcor, maxYcor)
-//     // } else {
-//     //   this.x = util.clamp(x, minXcor, maxXcor)
-//     //   this.y = util.clamp(y, minYcor, maxYcor)
-//     // }
-//   }
-//   const p = this.patch
-//   if (p.turtles != null && p !== p0) {
-//     // util.removeItem(p0.turtles, this)
-//     util.removeArrayItem(p0.turtles, this)
-//     p.turtles.push(this)
-//   }
-// }
-// // Handle turtle if x,y off-world
-// handleEdge (x, y) {
-//   if (util.isString(this.atEdge)) {
-//     const {minXcor, maxXcor, minYcor, maxYcor} = this.model.world
-//     if (this.atEdge === 'wrap') {
-//       this.x = util.wrap(x, minXcor, maxXcor)
-//       this.y = util.wrap(y, minYcor, maxYcor)
-//     } else if (this.atEdge === 'clamp' || this.atEdge === 'bounce') {
-//       this.x = util.clamp(x, minXcor, maxXcor)
-//       this.y = util.clamp(y, minYcor, maxYcor)
-//       if (this.atEdge === 'bounce') {
-//         if (this.x === minXcor || this.x === maxXcor)
-//           this.theta = Math.PI - this.theta
-//         else
-//           this.theta = -this.theta
-//       }
-//     } else {
-//       throw Error(`turtle.handleEdge: bad atEdge: ${this.atEdge}`)
-//     }
-//   } else {
-//     this.atEdge(this)
-//   }
-// }
-// // Place the turtle at the given patch/turtle location
-// moveTo (agent) { this.setxy(agent.x, agent.y) }
-// // Move forward (along theta) d units (patch coords),
-// forward (d) {
-//   this.setxy(this.x + d * Math.cos(this.theta), this.y + d * Math.sin(this.theta))
-// }
-// // Change current direction by rad radians which can be + (left) or - (right).
-// rotate (rad) { this.theta = util.mod(this.theta + rad, Math.PI * 2) }
-// right (rad) { this.rotate(-rad) }
-// left (rad) { this.rotate(rad) }
-//
-// // Set my direction towards turtle/patch or x,y.
-// // "direction" is euclidean radians.
-// face (agent) { this.theta = this.towards(agent) }
-// faceXY (x, y) { this.theta = this.towardsXY(x, y) }
-//
-// // Return the patch ahead of this turtle by distance (patchSize units).
-// // Return undefined if off-world.
-// patchAhead (distance) {
-//   return this.patchAtDirectionAndDistance(this.theta, distance)
-// }
-// // Use patchAhead to determine if this turtle can move forward by distance.
-// canMove (distance) { return this.patchAhead(distance) != null } // null / undefined
-// patchLeftAndAhead (angle, distance) {
-//   return this.patchAtDirectionAndDistance(angle + this.theta, distance)
-// }
-// patchRightAndAhead (angle, distance) {
-//   return this.patchAtDirectionAndDistance(angle - this.theta, distance)
-// }
-//
-// // 6 methods in both Patch & Turtle modules
-// // Distance from me to x, y. REMIND: No off-world test done
-// distanceXY (x, y) { return util.distance(this.x, this.y, x, y) }
-// // Return distance from me to object having an x,y pair (turtle, patch, ...)
-// // distance (agent) { this.distanceXY(agent.x, agent.y) }
-// distance (agent) { return util.distance(this.x, this.y, agent.x, agent.y) }
-// // Return angle towards agent/x,y
-// // Use util.heading to convert to heading
-// towards (agent) { return this.towardsXY(agent.x, agent.y) }
-// towardsXY (x, y) { return util.radiansToward(this.x, this.y, x, y) }
-// // Return patch w/ given parameters. Return undefined if off-world.
-// // Return patch dx, dy from my position.
-// patchAt (dx, dy) { return this.model.patches.patch(this.x + dx, this.y + dy) }
-// // Note: angle is absolute, w/o regard to existing angle of turtle.
-// // Use Left/Right versions below
-// patchAtDirectionAndDistance (direction, distance) {
-//   return this.model.patches.patchAtDirectionAndDistance(this, direction, distance)
-// }
-//
-// // // Return turtles/breeds within radius from me
-// // inRadius (radius, meToo = false) {
-// //   return this.agentSet.inRadius(this, radius, meToo)
-// // }
-// // // Return turtles/breeds within cone from me
-// // // Note: agentSet rather than turtles to allow for breeds
-// // inCone (radius, coneAngle, meToo = false) {
-// //   return this.agentSet.inCone(this, radius, coneAngle, this.theta, meToo)
-// // }
-//
-// // Link methods. Note: this.links returns all links linked to me.
-// // See links getter above.
-//
-// // Return other end of link from me. Link must include me!
-// otherEnd (l) { return l.end0 === this ? l.end1 : l.end0 }
-// // Return all turtles linked to me
-// linkNeighbors () { return this.links.map((l) => this.otherEnd(l)) }
 }
 
 // Sprites are images/drawings within a sprite-sheet.
@@ -3731,7 +3585,8 @@ class SpriteSheet {
     const sprite = util.isImageable(src)
       ? this.addImage(src)
       : this.addDrawing(src, color, strokeColor);
-    Object.assign(sprite, {src, color, strokeColor, needsUpdate: false});
+    Object.assign(sprite, {src, color, strokeColor});
+    // Object.assign(sprite, {src, color, strokeColor, needsUpdate: false})
 
     // Add normalized colors and shape name to new sprite.
     // if (color) {
@@ -3747,7 +3602,8 @@ class SpriteSheet {
 
   // Install a new named function in the paths object below.
   // Used to add "car", "thug", "spider" etc drawings.
-  installDrawing (fcn, name = fcn.name) { this.paths[name] = fcn; }
+  // installDrawing (fcn, name = fcn.name) { this.paths[name] = fcn }
+  installDrawFcn (fcn, name = fcn.name) { this.paths[name] = fcn; }
 
 // These are internal, experts only, use newSprite above for normal use.
 
@@ -4136,7 +3992,8 @@ class QuadSpritesMesh extends BaseMesh {
 
     for (let i = 0; i < turtles.length; i++) {
       const turtle = turtles[i];
-      if (turtle.sprite.needsUpdate) turtle.setSprite();
+      // if (turtle.sprite.needsUpdate) turtle.setSprite()
+      if (!turtle.sprite) turtle.setSprite();
       const size = turtle.size; // * patchSize
       const theta = turtle.theta;
       const cos = Math.cos(theta);
