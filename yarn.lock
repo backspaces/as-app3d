@@ -67,6 +67,10 @@ array-unique@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/array-unique/-/array-unique-0.2.1.tgz#a1d97ccafcbc2625cc70fadceb36a50c58b01a53"
 
+"as-core@github:backspaces/as-core":
+  version "0.1.0"
+  resolved "https://codeload.github.com/backspaces/as-core/tar.gz/0bcbf7aa6e946fc422750d49be6334341e642c5c"
+
 asn1@~0.2.3:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/asn1/-/asn1-0.2.3.tgz#dac8787713c9966849fc8180777ebe9c1ddf3b86"
@@ -659,10 +663,6 @@ core-js@^2.4.0, core-js@^2.5.0:
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
-
-"coreas@github:backspaces/CoreAS":
-  version "0.1.0"
-  resolved "https://codeload.github.com/backspaces/CoreAS/tar.gz/376f9e55c79b4799c76f524e44f5d8eab872dcc3"
 
 cross-spawn@^3.0.0:
   version "3.0.1"
