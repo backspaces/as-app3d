@@ -1,6 +1,4 @@
-import ColorMap from '../src/ColorMap.js'
-import Model from '../src/Model.js'
-import util from '../src/core/util.js'
+import {ColorMap, Model, util} from '../dist/AS.module.js'
 
 class Hello extends Model {
   // Inherit default constructor.

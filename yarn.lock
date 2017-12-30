@@ -7,12 +7,12 @@ abbrev@1:
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
 
 acorn@^5.0.0, acorn@^5.0.3:
-  version "5.2.1"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.2.1.tgz#317ac7821826c22c702d66189ab8359675f135d7"
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.3.0.tgz#7446d39459c54fb49a80e6ee6478149b940ec822"
 
 ajv@^5.1.0:
-  version "5.5.1"
-  resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.5.1.tgz#b38bb8876d9e86bee994956a04e721e88b248eb2"
+  version "5.5.2"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.5.2.tgz#73b5eeca3fab653e3d3f9422b341ad42205dc965"
   dependencies:
     co "^4.6.0"
     fast-deep-equal "^1.0.0"
@@ -69,7 +69,7 @@ array-unique@^0.2.1:
 
 "as-core@github:backspaces/as-core":
   version "0.1.0"
-  resolved "https://codeload.github.com/backspaces/as-core/tar.gz/0bcbf7aa6e946fc422750d49be6334341e642c5c"
+  resolved "https://codeload.github.com/backspaces/as-core/tar.gz/4ecac1f73668be0f0826308bb4390ae32b99b551"
 
 asn1@~0.2.3:
   version "0.2.3"
@@ -1786,9 +1786,9 @@ rimraf@2:
   dependencies:
     glob "^7.0.5"
 
-rollup@latest:
-  version "0.52.1"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-0.52.1.tgz#610e8e1be432f18fcfbfa865408a1cd7618cd707"
+rollup@^0.53.1:
+  version "0.53.1"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-0.53.1.tgz#58c3a43c8375385b3f92f0dc36fb4e9dbe872542"
 
 safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"
@@ -1976,9 +1976,9 @@ tar@^2.0.0:
     fstream "^1.0.2"
     inherits "2"
 
-three@latest:
-  version "0.88.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.88.0.tgz#4256c2fc38e4fb23a0d23eba2b6cce4df8e466d5"
+three@^0.89.0:
+  version "0.89.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.89.0.tgz#4442d819a6168871b8d2cb37ad12a24310c170f5"
 
 through@^2.3.7, through@~2.3.4:
   version "2.3.8"

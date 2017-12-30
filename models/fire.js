@@ -2,7 +2,7 @@ import Color from '../src/Color.js'
 import ColorMap from '../src/ColorMap.js'
 import Model from '../src/Model.js'
 import util from '../src/core/util.js'
-// import {Color, ColorMap, Model, util} from '../dist/AS.module.js'
+
 util.toWindow({ Color, ColorMap, Model, util })
 
 class FireModel extends Model {

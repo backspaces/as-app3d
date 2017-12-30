@@ -4143,7 +4143,7 @@ var ThreeMeshes = {
   QuadSpritesMesh,
   PointsMesh,
   LinksMesh
-};
+}
 
 // import SpriteSheet from './SpriteSheet.js'
 // window.Meshes = Meshes // REMIND
