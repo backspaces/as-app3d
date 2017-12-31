@@ -1,4 +1,3 @@
-// externals = (id) => id.includes('/libs/')
 function externals (id) { return id.includes('/dist/') }
 function globals (id) {
   const jsNames = {
@@ -12,16 +11,17 @@ function globals (id) {
 
 export default {
   input: 'src/AS.js',
-  banner: '/* eslint-disable */',
   external: externals,
   output: [
     { file: 'dist/AS.js',
       format: 'iife',
       globals: globals,
-      name: 'AS'
+      name: 'AS',
+      banner: '/* eslint-disable */'
     },
     { file: 'dist/AS.module.js',
-      format: 'es'
+      format: 'es',
+      banner: '/* eslint-disable */'
     }
   ]
 }
