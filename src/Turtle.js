@@ -12,26 +12,11 @@ import CoreTurtle from './core/Turtle.js'
 class Turtle extends CoreTurtle {
   static defaultVariables () {
     return { // Core variables for turtles. Not 'own' variables.
-      // x: 0,             // x, y, z in patchSize units.
-      // y: 0,             // Use turtles.setDefault('z', num) to change default height
-      // z: 0,
-      // theta: 0,         // my euclidean direction, radians from x axis, counter-clockwise
-      size: 1,          // size in patches, default to one patch
-
-      // patch: null,   // the patch I'm on .. uses getter below
-      // links: null,   // the links having me as an end point .. lazy promoted below
-      // atEdge: 'clamp',  // What to do if I wander off world. Can be 'clamp', 'wrap'
-                        // 'bounce', or a function, see handleEdge() method
+      size: 1,
       sprite: null,
       typedColor: null,
       typedStrokeColor: null,
       shapeFcn: `default`
-
-      // spriteFcn: 'default',
-      // spriteColor: Color.color(255, 0, 0),
-
-      // labelOffset: [0, 0],  // text pixel offset from the turtle center
-      // labelColor: Color.color(0, 0, 0) // the label color
     }
   }
   // Initialize a Turtle given its Turtles AgentSet.
@@ -41,17 +26,12 @@ class Turtle extends CoreTurtle {
   }
 
   // Create my sprite via shape: sprite, fcn, string, or image/canvas
-  // setSprite (shape = this.shape, color = this.color, strokeColor = this.strokeColor) {
   setSprite (sprite = null) {
     if (sprite) {
       this.sprite = sprite
     } else {
       let {shape, color, strokeColor} = this
-      // const needsStroke = shape.charAt(shape.length - 1) === '2'
       const needsStroke = shape.slice(-1) === '2'
-      // if (shape.sheet) { this.sprite = shape; return } // src is a sprite
-      // const ss = this.model.spriteSheet
-      // color = color || this.turtles.randomColor()
       shape = shape || 'default'
       color = color || this.model.randomColor()
       strokeColor = needsStroke
@@ -67,7 +47,6 @@ class Turtle extends CoreTurtle {
       const {shape, typedColor: color, typedStrokeColor: strokeColor} = this
       const needsStroke = shape.slice(-1) === '2'
       const ready = shape && color && (!needsStroke || strokeColor)
-      // const ready = shape && color && (needsStroke && strokeColor)
       if (ready)
         this.sprite = this.model.spriteSheet.newSprite(shape, color, strokeColor)
     } else {
@@ -77,18 +56,10 @@ class Turtle extends CoreTurtle {
   setSize (size) { this.size = size } // * this.model.world.patchSize }
 
   setColor (color) {
-    // if (this.turtles.settingDefault(this))
-    //   console.log(`setting default color ${color}`)
-    // if (!this.id) console.log(`setting default color ${color}`)
     const typedColor = Color.toColor(color) // Convert to Color.color
     const fixedColor = this.turtles.renderer.fixedColor // Is a Color.color
-    // if (fixedColor && !typedColor.equals(fixedColor)) {
     if (fixedColor) {
       util.warn(`turtle.setColor: fixedColor ${fixedColor.toString()}`)
-    // } else if (this.sprite && !settingDefault) {
-    // } else if (this.sprite) { // default sprite should always be null
-    //   this.sprite.color = typedColor
-    //   this.sprite.needsUpdate = true
     } else { // will set default color or instance color (if not fixed etc)
       this.typedColor = typedColor
     }
@@ -103,9 +74,6 @@ class Turtle extends CoreTurtle {
     const fixedColor = this.turtles.renderer.fixedColor // Model set to Color.color
     if (fixedColor) {
       util.warn(`turtle.setStrokeColor: fixedColor ${fixedColor.toString()}`)
-    // } else if (this.sprite) { // default sprite should always be null
-    //   this.sprite.strokeColor = typedColor
-    //   this.sprite.needsUpdate = true
     } else { // will set default color or instance color
       this.typedStrokeColor = typedColor
     }
@@ -119,14 +87,10 @@ class Turtle extends CoreTurtle {
 
   setShape (shape) {
     const fixedShape = this.turtles.renderer.fixedShape
-    if (fixedShape) {
+    if (fixedShape)
       util.warn(`turtle.setShape: fixedShape ${fixedShape}`)
-    // } else if (this.sprite) {
-    //   this.sprite.src = shape
-    //   this.sprite.needsUpdate = true
-    } else {
+    else
       this.shapeFcn = shape
-    }
     this.checkSprite()
   }
   getShape () { return this.sprite ? this.sprite.src : this.shapeFcn }

@@ -41,8 +41,6 @@ class DiffuseModel extends Model {
 }
 
 const options = Model.defaultWorld(200, 100)
-// options.minX = 2 * options.minX
-// options.maxX = 2 * options.maxY
 const model = new DiffuseModel(document.body, options)
 model.setup()
 model.start()

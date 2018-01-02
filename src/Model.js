@@ -33,9 +33,11 @@ class Model extends CoreModel {
 
   // The Model constructor takes a DOM div and model and renderer options.
   // Default values are given for all constructor arguments.
-  constructor (div = document.body,
-               worldOptions = Model.defaultWorld(),
-               rendererOptions = Model.defaultRenderer()) {
+  constructor (
+    div = document.body,
+    worldOptions = Model.defaultWorld(),
+    rendererOptions = Model.defaultRenderer()
+  ) {
     // Super ctor sets worldOptions, world, patches, turtles, links
     // Tricky: dependes on resetModel duplicated in this name space.
     super(worldOptions)
@@ -71,69 +73,13 @@ class Model extends CoreModel {
     // })
     this.resetView() // REMIND: Temporary
   }
-  // Call fcn(this) when any async
-  // whenReady (fcn) {
-  //   // util.waitPromise(() => this.modelReady).then(fcn())
-  //   util.waitOn(() => this.modelReady, () => fcn(this))
-  // }
-  // Add additional world variables derived from constructor's `modelOptions`.
-  // setWorld () {
-  //   const world = this.world
-  //   // REMIND: change to xPatches, yPatches?
-  //   world.numX = world.maxX - world.minX + 1
-  //   world.numY = world.maxY - world.minY + 1
-  //   world.width = world.numX * world.patchSize
-  //   world.height = world.numY * world.patchSize
-  //   world.minXcor = world.minX - 0.5
-  //   world.maxXcor = world.maxX + 0.5
-  //   world.minYcor = world.minY - 0.5
-  //   world.maxYcor = world.maxY + 0.5
-  //   world.isOnWorld = (x, y) => // No braces, is lambda expression
-  //     (world.minXcor <= x) && (x <= world.maxXcor) &&
-  //     (world.minYcor <= y) && (y <= world.maxYcor)
-  // }
-  // createQuad (r, z = 0) { // r is radius of xy quad: [-r,+r], z is quad z
-  //   const vertices = [-r, -r, z, r, -r, z, r, r, z, -r, r, z]
-  //   const indices = [0, 1, 2, 0, 2, 3]
-  //   return {vertices, indices}
-  // }
-  // (Re)initialize the model. REMIND: not quite right
-  // setAgentSetViewProps (agentSet, mesh) {
-  //   agentSet.isMonochrome = mesh.isMonochrome()
-  //   agentSet.useSprites = mesh.useSprites()
-  // }
-  // initAgentSet (name, AgentsetClass, AgentClass) {
-  //   const agentset = new AgentsetClass(this, AgentClass, name)
-  //   const mesh = this.meshes[name]
-  //   // const meshName = mesh.constructor.name
-  //   this[name] = agentset
-  //   // agentset.setDefault('renderer', mesh)
-  //   agentset.renderer = mesh
-  //   if (mesh.fixedColor) agentset.setDefault('color', mesh.fixedColor)
-  //   // REMIND: Turtles only?
-  //   if (mesh.fixedShape) agentset.setDefault('shape', mesh.fixedShape)
-  //   // this.agentset.fixedColor = agentset.renderer.options.color
-  //   // agentset.useSprites = meshName in ['PointSpritesMesh', 'QuadSpritesMesh']
-  //   // agentset.fixedColor = agentset.renderer.options.color
-  //   // agentset.useSprites = meshName in ['PointSpritesMesh', 'QuadSpritesMesh']
-  //   // agentset.fixedShape =
-  //   mesh.init(agentset)
-  // }
+
   initAgentRenderer (agentset) {
-    // const agentset = new AgentsetClass(this, AgentClass, name)
     const mesh = this.meshes[agentset.name]
-    // const meshName = mesh.constructor.name
-    // this[name] = agentset
-    // agentset.setDefault('renderer', mesh)
     agentset.renderer = mesh
     if (mesh.fixedColor) agentset.setDefault('color', mesh.fixedColor)
     // REMIND: Turtles only?
     if (mesh.fixedShape) agentset.setDefault('shape', mesh.fixedShape)
-    // this.agentset.fixedColor = agentset.renderer.options.color
-    // agentset.useSprites = meshName in ['PointSpritesMesh', 'QuadSpritesMesh']
-    // agentset.fixedColor = agentset.renderer.options.color
-    // agentset.useSprites = meshName in ['PointSpritesMesh', 'QuadSpritesMesh']
-    // agentset.fixedShape =
     mesh.init(agentset)
   }
   // Duplicate core.resetModel. Called by core's ctor.
@@ -154,23 +100,6 @@ class Model extends CoreModel {
     this.initAgentRenderer(this.patches)
     this.initAgentRenderer(this.turtles)
     this.initAgentRenderer(this.links)
-    // this.patches = new Patches(this, Patch, 'patches')
-    // this.patches.renderer = this.meshes.patches
-    // this.meshes.patches.init(this.patches)
-    // this.setAgentSetViewProps(this.patches, this.meshes.patches)
-    //
-    // this.turtles = new Turtles(this, Turtle, 'turtles')
-    // this.turtles.renderer = this.meshes.turtles
-    // this.meshes.turtles.init(this.turtles)
-    // this.setAgentSetViewProps(this.turtles, this.meshes.turtles)
-    //
-    // this.links = new Links(this, Link, 'links')
-    // this.turtles.links = this.meshes.links
-    // this.meshes.links.init(this.links)
-    // this.setAgentSetViewProps(this.links, this.meshes.links)
-
-    // this.setup()
-    // if (restart) this.start()
   }
   reset () {
     this.resetModel()
@@ -179,35 +108,22 @@ class Model extends CoreModel {
 
   randomColor () { return this.colorMap.randomColor() }
 
-// ### User Model Creation
+  // ### User Model Creation
   // A user's model is made by subclassing Model and over-riding
   // 2 CoreAS abstract methods: setup, step.
   // start, stop, once required: CoreAS has no animator.
 
   // setup () {} // Your initialization code goes here
-  // // Update/step your model here
   // step () {} // called each step of the animation
 
   // Start/stop the animation. Return model for chaining.
   start () {
-    // util.waitOn(() => this.modelReady, () => {
-    //   this.anim.start()
-    // })
     this.anim.start()
     return this
   }
   stop () { this.anim.stop() }
   // Animate once by `step(); draw()`.
   once () { this.stop(); this.anim.once() } // stop is no-op if already stopped
-
-  // Change the world parameters. Requires a reset.
-  // Resets Patches, Turtles, Links & reinitializes canvases.
-  // If restart argument is true (default), will restart after resetting.
-  // resizeWorld (modelOptions, restart = true) {
-  //   Object.assign(this.world, modelOptions)
-  //   this.setWorld(this.world)
-  //   this.reset(restart)
-  // }
 
   draw (force = this.anim.stopped || this.anim.draws === 1) {
     // const {scene, camera} = this.view
@@ -234,21 +150,6 @@ class Model extends CoreModel {
   // Breeds: create breeds/subarrays of Patches, Agents, Links
   // Unlike resetModel(), it can use CoreAS's; the baseSets
   // have used this module's Patch, Patches, ...
-  // patchBreeds (breedNames) {
-  //   for (const breedName of breedNames.split(' ')) {
-  //     this[breedName] = this.patches.newBreed(breedName)
-  //   }
-  // }
-  // turtleBreeds (breedNames) {
-  //   for (const breedName of breedNames.split(' ')) {
-  //     this[breedName] = this.turtles.newBreed(breedName)
-  //   }
-  // }
-  // linkBreeds (breedNames) {
-  //   for (const breedName of breedNames.split(' ')) {
-  //     this[breedName] = this.links.newBreed(breedName)
-  //   }
-  // }
 }
 
 export default Model

@@ -38,7 +38,7 @@ const ColorMap = {
     return util.ctxImageData(ctx).data
   },
 
-// ### Array Conversion Utilities
+  // ### Array Conversion Utilities
 
   // Convert a Uint8Array into Array of 4 element typedColors.
   // Useful for converting ImageData objects like gradients to colormaps.
@@ -83,7 +83,7 @@ const ColorMap = {
     return this.permuteArrays(...ramps)
   },
 
-// ### ColorMaps
+  // ### ColorMaps
 
   // ColorMaps are Arrays of TypedColors with these additional methods. Webgl
   // ready if made w/ `typedArraytoColors` or `arraysToColors` above.
@@ -166,14 +166,15 @@ const ColorMap = {
     // Lets the user specify any color, and let the colormap
     // use the best match.
     closestIndex (r, g, b) {
-      return this.cube ? // eslint-disable-line
-        this.cubeClosestIndex(r, g, b) : this.rgbClosestIndex(r, g, b)
+      return this.cube
+        ? this.cubeClosestIndex(r, g, b)
+        : this.rgbClosestIndex(r, g, b)
     },
     // Choose the appropriate method for finding closest color
     closestColor (r, g, b) { return this[this.closestIndex(r, g, b)] }
   },
 
-// ### Utilities for constructing ColorMaps
+  // ### Utilities for constructing ColorMaps
 
   // Convert an array of rgb(a) Arrays or TypedColors to a webgl-ready colormap.
   basicColorMap (colors) {
@@ -257,7 +258,7 @@ const ColorMap = {
     return map
   },
 
-// ### Shared Global ColorMaps
+  // ### Shared Global ColorMaps
 
   // The shared global colormaps are lazy evaluated to minimize memory use.
   LazyMap (name, map) {

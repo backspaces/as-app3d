@@ -6,14 +6,12 @@ class ExitModel extends Model {
   setup () {
     this.patchBreeds('exits inside wall')
     this.turtles.setDefault('shape', 'circle')
-    this.turtles.setDefault('atEdge', (turtle) => turtle.die())
+    this.turtles.setDefault('atEdge', turtle => turtle.die())
 
     this.numExits = 10
     this.population = 0.75 // percent of inside populated
 
     this.anim.setRate(10)
-
-    // this.inside.setDefault('color', )
 
     this.setupPatches()
     this.setupTurtles()

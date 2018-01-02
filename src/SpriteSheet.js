@@ -70,7 +70,7 @@ class SpriteSheet {
   // installDrawing (fcn, name = fcn.name) { this.paths[name] = fcn }
   installDrawFcn (fcn, name = fcn.name) { this.paths[name] = fcn }
 
-// These are internal, experts only, use newSprite above for normal use.
+  // These are internal, experts only, use newSprite above for normal use.
 
   // Make a unique, normalized sprite name. See note on src, colors above.
   // Color names are hex css formats, see newSprite's name transformation.
@@ -264,10 +264,12 @@ const paths = {
     this.person2(ctx)
   },
   person2 (ctx) {
-    this.poly(ctx, [ [0.3, -0.4], [0.6, 0], [0.25, 0.2], [0.25, -0.1],
-    [0.2, 0.3], [0.5, 1], [0.1, 1], [0, 0.5],
-    [-0.1, 1], [-0.5, 1], [-0.2, 0.3], [-0.25, -0.1],
-    [-0.25, 0.2], [-0.6, 0], [-0.3, -0.4]])
+    this.poly(ctx, [
+      [0.3, -0.4], [0.6, 0], [0.25, 0.2], [0.25, -0.1],
+      [0.2, 0.3], [0.5, 1], [0.1, 1], [0, 0.5],
+      [-0.1, 1], [-0.5, 1], [-0.2, 0.3], [-0.25, -0.1],
+      [-0.25, 0.2], [-0.6, 0], [-0.3, -0.4]
+    ])
     ctx.closePath()
     ctx.fill()
     ctx.beginPath()

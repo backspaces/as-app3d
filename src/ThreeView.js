@@ -14,25 +14,22 @@ class ThreeView {
     const options = {
     // include me in options so Model can instanciate me!
       Renderer: ThreeView, // REMIND: use string.
-      orthoView: false,             // 'Perspective', 'Orthographic'
-      clearColor: 0x000000,         // clear to black
-      useAxes: useThreeHelpers,     // show x,y,z axes
-      useGrid: useThreeHelpers,     // show x,y plane
+      orthoView: false, // 'Perspective', 'Orthographic'
+      clearColor: 0x000000, // clear to black
+      useAxes: useThreeHelpers, // show x,y,z axes
+      useGrid: useThreeHelpers, // show x,y plane
       useControls: useThreeHelpers, // navigation. REMIND: control name?
-      useStats: useUIHelpers,       // show fps widget
-      useGUI: useUIHelpers,         // activate dat.gui UI
-      // meshes: {
+      useStats: useUIHelpers, // show fps widget
+      useGUI: useUIHelpers, // activate dat.gui UI
       patches: {
         meshClass: 'PatchesMesh'
       },
       turtles: {
         meshClass: 'QuadSpritesMesh'
-        // meshClass: 'PointsMesh'
       },
       links: {
         meshClass: 'LinksMesh'
       }
-      // }
     }
     // util.forEach(options.meshes, (val, key) => {
     //   const Mesh = ThreeMeshes[val.meshClass]

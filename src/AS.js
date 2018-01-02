@@ -20,7 +20,6 @@ import World           from './core/World.js'
 import util            from './core/util.js'
 /* eslint-enable */
 
-// export default {
 export {
   AgentArray,
   AgentSet,

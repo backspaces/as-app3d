@@ -71,11 +71,12 @@ const Color = {
   // * hexString otherwise
   // * with the hexShortString if appropriate
   triString (r, g, b, a = 255) {
-    return (a === 255) ? // eslint-disable-line
-      this.hexString(r, g, b, true) : this.rgbaString(r, g, b, a)
+    return (a === 255)
+      ? this.hexString(r, g, b, true)
+      : this.rgbaString(r, g, b, a)
   },
 
-// ### CSS String Conversions
+  // ### CSS String Conversions
 
   // Return 4 element array given any legal CSS string color.
   //

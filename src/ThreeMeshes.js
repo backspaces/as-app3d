@@ -16,9 +16,10 @@ export class BaseMesh { // static options(): https://goo.gl/sKdxoY
     this.fixedColor = options.color
     this.fixedSize = options.pointSize
     this.fixedShape =
-      (this.name === 'PatchesMesh') ? 'Patch'
-      : (this.name === 'PointsMesh') ? 'Point'
-      : (this.name === 'LinksMesh') ? 'Link' : undefined
+    (this.name === 'PatchesMesh')
+      ? 'Patch' : (this.name === 'PointsMesh')
+        ? 'Point' : (this.name === 'LinksMesh')
+          ? 'Link' : undefined
     this.useSprites = this.name.match(/sprites/i) != null
     // BaseMesh,
     // CanvasMesh,
@@ -233,8 +234,8 @@ export class PointsMesh extends BaseMesh {
         new THREE.BufferAttribute(new Float32Array(), 3))
 
     const material = color
-    ? new THREE.PointsMaterial({size: pointSize, color: color})
-    : new THREE.PointsMaterial({size: pointSize, vertexColors: THREE.VertexColors})
+      ? new THREE.PointsMaterial({size: pointSize, color: color})
+      : new THREE.PointsMaterial({size: pointSize, vertexColors: THREE.VertexColors})
 
     this.mesh = new THREE.Points(geometry, material)
     this.mesh.position.z = this.options.z
