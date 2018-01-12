@@ -1,5 +1,5 @@
 // import SpriteSheet from './SpriteSheet.js'
-import util from './core/util.js'
+import util from '../node_modules/as-core/src/util.js'
 import ThreeMeshes from './ThreeMeshes.js'
 
 import THREE from '../dist/three.wrapper.js'

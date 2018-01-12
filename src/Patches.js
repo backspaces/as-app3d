@@ -1,5 +1,5 @@
-import util from './core/util.js'
-import CorePatches from './core/Patches.js'
+import util from '../node_modules/as-core/src/util.js'
+import CorePatches from '../node_modules/as-core/src/Patches.js'
 
 // See CorePatches for the patches architecture
 class Patches extends CorePatches {

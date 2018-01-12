@@ -1,5 +1,5 @@
 import Color from './Color.js'
-import CorePatch from './core/Patch.js'
+import CorePatch from '../node_modules/as-core/src/Patch.js'
 
 // See CorePatch for how patches are "flyweight" patterns.
 class Patch extends CorePatch {

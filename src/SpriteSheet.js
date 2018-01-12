@@ -1,5 +1,5 @@
 import Color from './Color.js'
-import util from './core/util.js'
+import util from '../node_modules/as-core/src/util.js'
 
 // Sprites are images/drawings within a sprite-sheet.
 class SpriteSheet {

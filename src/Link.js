@@ -1,6 +1,6 @@
-import util from './core/util.js'
+import util from '../node_modules/as-core/src/util.js'
 import Color from './Color.js'
-import CoreLink from './core/Link.js'
+import CoreLink from '../node_modules/as-core/src/Link.js'
 
 class Link extends CoreLink {
   static defaultVariables () { // Instance variables.

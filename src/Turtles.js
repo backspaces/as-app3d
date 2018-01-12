@@ -1,5 +1,5 @@
-import util from './core/util.js'
-import CoreTurtles from './core/Turtles.js'
+import util from '../node_modules/as-core/src/util.js'
+import CoreTurtles from '../node_modules/as-core/src/Turtles.js'
 
 // See CoreTurtles for architecture
 class Turtles extends CoreTurtles {

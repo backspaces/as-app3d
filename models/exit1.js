@@ -1,7 +1,7 @@
 // /* eslint-disable */
 import ColorMap from '../src/ColorMap.js'
 import Model from '../src/Model.js'
-import util from '../src/core/util.js'
+import util from '../node_modules/as-core/src/util.js'
 
 util.toWindow({ ColorMap, Model, util })
 

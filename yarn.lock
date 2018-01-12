@@ -69,7 +69,7 @@ array-unique@^0.2.1:
 
 "as-core@github:backspaces/as-core":
   version "0.1.0"
-  resolved "https://codeload.github.com/backspaces/as-core/tar.gz/4ecac1f73668be0f0826308bb4390ae32b99b551"
+  resolved "https://codeload.github.com/backspaces/as-core/tar.gz/ff344fb5ce9a39686e906f3a5961470078caebcd"
 
 asn1@~0.2.3:
   version "0.2.3"
@@ -1787,8 +1787,8 @@ rimraf@2:
     glob "^7.0.5"
 
 rollup@^0.53.1:
-  version "0.53.1"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-0.53.1.tgz#58c3a43c8375385b3f92f0dc36fb4e9dbe872542"
+  version "0.53.4"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-0.53.4.tgz#f92ce56ee1d097ad5b6f13951bc80db5fef18113"
 
 safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"

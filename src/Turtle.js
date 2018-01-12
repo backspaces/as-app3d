@@ -1,6 +1,6 @@
-import util from './core/util.js'
+import util from '../node_modules/as-core/src/util.js'
 import Color from './Color.js'
-import CoreTurtle from './core/Turtle.js'
+import CoreTurtle from '../node_modules/as-core/src/Turtle.js'
 
 // Flyweight object creation, see Patch/Patches.
 
