@@ -52,7 +52,7 @@
     "build-docs": "cp -Rp README.md dist docs && bin/docsmodels.sh",
     "minify": "squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js",
     "build-dist": "rollup -c",
-    "test": "pwd #always repo root"
+    "test": "ava --verbose"
   },
   "dependencies": {
     "dat.gui": "^0.6.5",
@@ -61,8 +61,12 @@
   },
   "devDependencies": {
     "as-core": "github:backspaces/as-core",
+    "ava": "^0.24.0",
     "butternut": "^0.4.6",
+    "live-server": "^1.2.0",
+    "puppeteer": "^1.0.0",
     "rollup": "^0.53.1",
-    "sane": "^1.6.0"
+    "sane": "^1.6.0",
+    "shelljs": "^0.8.0"
   }
 }

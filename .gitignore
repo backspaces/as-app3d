@@ -3,7 +3,8 @@
 # Derived files other than docs/
 /libs/
 /dist/
-/test/
+/tests/
+/test/*.png
 
 node_modules/
 npm-debug.log

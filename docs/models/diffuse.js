@@ -4,7 +4,7 @@ util.toWindow({ ColorMap, Model, util })
 
 class DiffuseModel extends Model {
   setup () {
-    this.patches.own('ran ds')
+    // this.patches.own('ran ds')
     this.turtles.setDefault('speed', 0.5)
     this.turtles.setDefault('atEdge', 'wrap')
     this.turtles.setDefault('size', 5)
@@ -16,7 +16,7 @@ class DiffuseModel extends Model {
     // REMIND: Three mouse picking: this.mouse = new Mouse(this, true).start()
     this.patches.ask(p => {
       p.ran = util.randomFloat(1.0)
-      p.ds = 0
+      // p.ds = 0
     })
 
     this.patches.nOf(this.population).ask(p => {
