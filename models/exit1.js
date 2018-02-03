@@ -2,8 +2,9 @@
 import ColorMap from '../src/ColorMap.js'
 import Model from '../src/Model.js'
 import util from '../node_modules/as-core/src/util.js'
+import dat from 'https://unpkg.com/dat.gui/build/dat.gui.module.js'
 
-util.toWindow({ ColorMap, Model, util })
+util.toWindow({ ColorMap, Model, util, dat })
 
 const UI = {
   NumExits: 10, // 10
@@ -43,7 +44,8 @@ util.toWindow({ UI })
 class ExitModel extends Model {
   constructor (div, options) {
     super(div, options)
-    this.gui = this.view.gui
+    // this.gui = this.view.gui
+    this.gui = new dat.GUI()
     this.gui.add(UI, 'NumExits', 1, 12).step(1)
     this.gui.add(UI, 'Obstacles', 0.0, 0.95).step(0.05)
     this.gui.add(UI, 'Population', 0.05, 0.95).step(0.05)

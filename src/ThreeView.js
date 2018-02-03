@@ -4,8 +4,8 @@ import ThreeMeshes from './ThreeMeshes.js'
 
 import THREE from '../dist/three.wrapper.js'
 import '../dist/OrbitControls.wrapper.js'
-import Stats from '../dist/stats.wrapper.js'
-import dat from '../dist/dat.gui.wrapper.js'
+// import Stats from '../dist/stats.wrapper.js'
+// import dat from '../dist/dat.gui.wrapper.js'
 
 // window.Meshes = Meshes // REMIND
 
@@ -19,8 +19,8 @@ class ThreeView {
       useAxes: useThreeHelpers, // show x,y,z axes
       useGrid: useThreeHelpers, // show x,y plane
       useControls: useThreeHelpers, // navigation. REMIND: control name?
-      useStats: useUIHelpers, // show fps widget
-      useGUI: useUIHelpers, // activate dat.gui UI
+      // useStats: useUIHelpers, // show fps widget
+      // useGUI: useUIHelpers, // activate dat.gui UI
       patches: {
         meshClass: 'PatchesMesh'
       },
@@ -160,7 +160,8 @@ class ThreeView {
   }
   initThreeHelpers () {
     const {scene, renderer, camera} = this
-    const {useAxes, useGrid, useControls, useStats, useGUI} = this
+    // const {useAxes, useGrid, useControls, useStats, useGUI} = this
+    const {useAxes, useGrid, useControls} = this
     const {width} = this.model.world
     const helpers = {}
 
@@ -176,14 +177,14 @@ class ThreeView {
     if (useControls) {
       helpers.controls = new THREE.OrbitControls(camera, renderer.domElement)
     }
-    if (useStats) {
-      helpers.stats = new Stats()
-      // This does not work: helpers.stats.dom.style.position = 'absolute'
-      document.body.appendChild(helpers.stats.dom)
-    }
-    if (useGUI) {
-      helpers.gui = new dat.GUI() // auto adds to body, appendChild not needed
-    }
+    // if (useStats) {
+    //   helpers.stats = new Stats()
+    //   // This does not work: helpers.stats.dom.style.position = 'absolute'
+    //   document.body.appendChild(helpers.stats.dom)
+    // }
+    // if (useGUI) {
+    //   helpers.gui = new dat.GUI() // auto adds to body, appendChild not needed
+    // }
 
     Object.assign(this, helpers)
   }

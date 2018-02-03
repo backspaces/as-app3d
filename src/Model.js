@@ -144,7 +144,7 @@ class Model extends CoreModel {
       // REMIND: generalize.
       this.view.renderer.render(this.view.scene, this.view.camera)
     }
-    if (this.view.stats) this.view.stats.update()
+    // if (this.view.stats) this.view.stats.update()
   }
 
   // Breeds: create breeds/subarrays of Patches, Agents, Links

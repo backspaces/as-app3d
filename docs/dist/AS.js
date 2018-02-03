@@ -1,10 +1,8 @@
 /* eslint-disable */
-var AS = (function (exports,THREE,OrbitControls_wrapper_js,Stats,dat) {
+var AS = (function (exports,THREE) {
 'use strict';
 
 THREE = THREE && THREE.hasOwnProperty('default') ? THREE['default'] : THREE;
-Stats = Stats && Stats.hasOwnProperty('default') ? Stats['default'] : Stats;
-dat = dat && dat.hasOwnProperty('default') ? dat['default'] : dat;
 
 // A set of useful misc utils which will eventually move to individual files.
 // Note we use arrow functions one-liners, more likely to be optimized.
@@ -12,9 +10,9 @@ dat = dat && dat.hasOwnProperty('default') ? dat['default'] : dat;
 
 const util = {
 
-  // ### Types
+// ### Types
 
-  // Fix the javascript typeof operator https://goo.gl/Efdzk5
+  // Fixing the javascript [typeof operator](https://goo.gl/Efdzk5)
   typeOf: (obj) => ({}).toString.call(obj).match(/\s(\w+)/)[1].toLowerCase(),
   isOneOfTypes: (obj, array) => array.includes(util.typeOf(obj)),
   // isUintArray: (obj) => util.typeOf(obj).match(/uint.*array/),
@@ -32,17 +30,13 @@ const util = {
   isString: (obj) => util.typeOf(obj) === 'string',
   isObject: (obj) => util.typeOf(obj) === 'object',
   // Return array's type (Array or TypedArray variant)
-  typeName: (obj) => obj.constructor.name,
+  arrayType (array) { return array.constructor },
 
   // Check [big/little endian](https://en.wikipedia.org/wiki/Endianness)
   isLittleEndian () {
     const d32 = new Uint32Array([0x01020304]);
     return (new Uint8ClampedArray(d32.buffer))[0] === 4
   },
-
-  inNode: () => typeof window === 'undefined' && typeof global !== 'undefined',
-  inBrowser: () => !util.inNode(),
-  globalObject: () => util.inNode() ? global : window,
 
   // Identity fcn, returning its argument unchanged. Used in callbacks
   identity: (o) => o,
@@ -55,7 +49,7 @@ const util = {
   // Result same length as array, precision may be lost.
   convertArray (array, Type) {
     const Type0 = array.constructor;
-    if (Type0 === Type) return array // return array if already same Type
+    if (Type0 === Type) return array  // return array if already same Type
     return Type.from(array) // Use .from (both TypedArrays and Arrays)
   },
   // Convert to/from new Uint8Array view onto an Array or TypedArray.
@@ -91,30 +85,7 @@ const util = {
     return uint8Array
   },
 
-  // ### Debug
-
-  // Two PRNGs.
-  randomSeedSin (seed = Math.PI / 4) { // ~3.4 million b4 repeat.
-    // https://stackoverflow.com/a/19303725/1791917
-    return () => {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x)
-    }
-  },
-  randomSeedParkMiller (seed = 123456) { // doesn't repeat b4 JS dies.
-    // https://gist.github.com/blixt/f17b47c62508be59987b
-    seed = seed % 2147483647;
-    return () => {
-      seed = seed * 16807 % 2147483647;
-      return (seed - 1) / 2147483646
-    }
-  },
-  // Replace Math.random with one of these
-  randomSeed (seed, useParkMiller = true) {
-    Math.random = useParkMiller
-      ? this.randomSeedParkMiller(seed)
-      : this.randomSeedSin(seed);
-  },
+// ### Debug
 
   // Print a message just once.
   logOnce (msg) {
@@ -127,20 +98,12 @@ const util = {
   warn (msg) {
     this.logOnce('Warning: ' + msg);
   },
-  // Print a message to an html element or to console.
-  // Default to document.body if in browser.
-  // Default to console.log if in node.
-  // If msg is an object, convert to JSON
-  print (msg, element = null) {
-    if (this.isObject(msg)) msg = JSON.stringify(msg);
-    if (!element && this.inBrowser()) element = document.body;
-
-    if (element) {
-      element.style.fontFamily = 'monospace';
-      element.innerHTML += msg + '<br />';
-    } else {
-      console.log(msg);
-    }
+  // Print a message to an html element
+  log (msg, element = document.body) {
+    element.style.fontFamily = 'monospace';
+    element.innerHTML += this.isObject(msg)
+      ? JSON.stringify(msg) + '<br />'
+      : msg + '<br />';
   },
 
   // Use chrome/ffox/ie console.time()/timeEnd() performance functions
@@ -172,7 +135,7 @@ const util = {
 
   // Merge from's key/val pairs into to the global window namespace
   toWindow (obj) {
-    Object.assign(this.globalObject(), obj);
+    Object.assign(window, obj);
     console.log('toWindow:', Object.keys(obj).join(', '));
   },
 
@@ -191,7 +154,7 @@ const util = {
       .replace(/":/g, ':')
   },
 
-  // ### HTML, CSS, DOM
+// ### HTML, CSS, DOM
 
   // REST: Parse the query, returning an object of key/val pairs.
   parseQueryString () {
@@ -221,7 +184,7 @@ const util = {
     return [ evt.clientX - rect.left, evt.clientY - rect.top ]
   },
 
-  // ### Math
+// ### Math
 
   // Return random int/float in [0,max) or [min,max) or [-r/2,r/2)
   randomInt: (max) => Math.floor(Math.random() * max),
@@ -270,7 +233,7 @@ const util = {
   // Calculate the lerp scale given lo/hi pair and a number between them.
   lerpScale: (number, lo, hi) => (number - lo) / (hi - lo),
 
-  // ### Geometry
+// ### Geometry
 
   // Degrees & Radians
   // radians: (degrees) => util.mod(degrees * Math.PI / 180, Math.PI * 2),
@@ -322,7 +285,7 @@ const util = {
     return coneAngle / 2 >= Math.abs(this.subtractRadians(direction, angle12))
   },
 
-  // ### Arrays, Objects and Iteration
+// ### Arrays, Objects and Iteration
 
   // Repeat function f(i, a) n times, i in 0, n-1, a is optional array
   repeat (n, f, a = []) { for (let i = 0; i < n; i++) f(i, a); return a },
@@ -485,7 +448,7 @@ const util = {
     return this.normalize(array, lo, hi).map((n) => Math.round(n))
   },
 
-  // ### Async
+// ### Async
 
   // Return Promise for getting an image.
   // - use: imagePromise('./path/to/img').then(img => imageFcn(img))
@@ -542,7 +505,7 @@ const util = {
       setTimeout(() => { this.waitOn(done, f, ms); }, ms);
   },
 
-  // ### Canvas utilities
+// ### Canvas utilities
 
   // Create a blank 2D canvas of a given width/height
   createCanvas (width, height) {
@@ -637,48 +600,10 @@ class AgentArray extends Array {
   // Call fcn(agent) for each agent in AgentArray.
   // Return the AgentArray for chaining.
   // Note: 5x+ faster than this.forEach(fcn) !!
-  ask (fcn) {
-    for (let i = 0; i < this.length; i++) fcn(this[i], i);
-    return this
-  }
+  ask (fcn) { for (let i = 0; i < this.length; i++) fcn(this[i], i); return this }
   // Return count of agents with reporter(agent) true
   count (reporter) {
     return this.reduce((prev, o) => prev + (reporter(o) ? 1 : 0), 0)
-  }
-  // sum (key) {
-  //   if (key == null) // sum items
-  //     return this.reduce((prev, o) => prev + o)
-  //   else // sum prop values
-  //     return this.reduce((prev, o) => prev + o[key])
-  // }
-  sum (key) {
-    return this.reduce((prev, o) => prev + (key ? o[key] : o), 0)
-  }
-  avg (key) { return this.sum(key) / this.length }
-  min (key) {
-    return this.reduce((prev, o) => Math.min(prev, key ? o[key] : o), Infinity)
-  }
-  max (key) {
-    return this.reduce((prev, o) => Math.max(prev, key ? o[key] : o), -Infinity)
-  }
-  histogram (key, bins = 10, min = this.min(key), max = this.max(key)) {
-    const binSize = (max - min) / bins;
-    const aa = new AgentArray(bins);
-    aa.fill(0);
-    this.ask(a => {
-      const val = key ? a[key] : a;
-      if (val < min || val > max) {
-        util.warn(`histogram bounds error: ${val}: ${min}-${max}`);
-      } else {
-        let bin = Math.floor((val - min) / binSize);
-        if (bin === bins) bin--; // val is max, round down
-        aa[bin]++;
-      }
-    });
-    // Object.assign(aa, {bins, min, max, binSize, key})
-    aa.parameters = {key, bins, min, max, binSize, arraySize: this.length};
-    // console.log(key, bins, min, max, binSize, aa)
-    return aa
   }
 
   // Return shallow copy of a portion of this AgentArray
@@ -1825,7 +1750,7 @@ class DataSet {
   // Return Array 3x3 neighbor values of the given x,y of the dataset.
   // Off-edge neighbors revert to nearest edge value.
   neighborhood (x, y, array = []) {
-    array.length = 0; // in case user supplied an array to reduce GC
+    array.length = 0;  // in case user supplied an array to reduce GC
     const clampNeeded = (x === 0) || (x === this.width - 1) ||
                         (y === 0) || (y === this.height - 1);
     for (let dy = -1; dy <= +1; dy++) {
@@ -1850,8 +1775,8 @@ class DataSet {
   // dataset of same size.
   convolve (kernel, factor = 1, crop = false) {
     const [x0, y0, h, w] = crop // optimization not needed, only called once
-      ? [1, 1, this.height - 1, this.width - 1]
-      : [0, 0, this.height, this.width];
+     ? [1, 1, this.height - 1, this.width - 1]
+     : [0, 0, this.height, this.width];
     const newDS = this.emptyDataSet(w, h);
     const newData = newDS.data;
     let i = 0;
@@ -2006,9 +1931,9 @@ class DataSet {
 class Link$2 {
   static defaultVariables () { // Core variables for patches. Not 'own' variables.
     return {
-      end0: null, // Turtles: end0 & 1 are turtle ends of the link
+      end0: null,       // Turtles: end0 & 1 are turtle ends of the link
       end1: null,
-      width: 1 // THREE: must be 1. Canvas2D (unsupported) has widths.
+      width: 1          // THREE: must be 1. Canvas2D (unsupported) has widths.
     }
   }
   // Initialize a Link
@@ -2173,6 +2098,21 @@ class Patches$2 extends AgentSet {
       this.addAgent(); // Object.create(this.agentProto))
     });
   }
+  // Setup pixels ctx used for patch.color: `draw` and `importColors`
+  // setPixels () {
+  //   const {numX, numY} = this.model.world
+  //   this.pixels = {
+  //     ctx: util.createCtx(numX, numY)
+  //   }
+  //   this.setImageData()
+  // }
+  // Create the pixels object used by `setPixels` and `installColors`
+  // setImageData () {
+  //   const pixels = this.pixels
+  //   pixels.imageData = util.ctxImageData(pixels.ctx)
+  //   pixels.data8 = pixels.imageData.data
+  //   pixels.data = new Uint32Array(pixels.data8.buffer)
+  // }
 
   setDefault (name, value) {
     if (name === 'color') {
@@ -2244,6 +2184,32 @@ class Patches$2 extends AgentSet {
     return [util.randomInt2(minX, maxX), util.randomInt2(minY, maxY)]
   }
 
+  // installPixels () {
+  //   const pixels = this.pixels
+  //   pixels.ctx.putImageData(pixels.imageData, 0, 0)
+  //   return pixels
+  // }
+  // // Draws, or "imports" an image URL into the drawing layer.
+  // // The image is scaled to fit the drawing layer.
+  // // This is an async function, using es6 Promises.
+  // importDrawing (imageSrc) {
+  //   util.imagePromise(imageSrc)
+  //   .then((img) => this.installDrawing(img))
+  // }
+  // // Direct install image into the given context, not async.
+  // installDrawing (img, ctx = this.model.contexts.drawing) {
+  //   util.fillCtxWithImage(ctx, img)
+  // }
+  // importColors (imageSrc) {
+  //   util.imagePromise(imageSrc)
+  //   .then((img) => this.installColors(img))
+  // }
+  // // Direct install image into the patch colors, not async.
+  // installColors (img) {
+  //   util.fillCtxWithImage(this.pixels.ctx, img)
+  //   this.setImageData()
+  // }
+
   // Import/export DataSet to/from patch variable `patchVar`.
   // `useNearest`: true for fast rounding to nearest; false for bi-linear.
   importDataSet (dataSet, patchVar, useNearest = false) {
@@ -2254,6 +2220,8 @@ class Patches$2 extends AgentSet {
     const {numX, numY} = this.model.world;
     const dataset = dataSet.resample(numX, numY, useNearest);
     this.ask(p => { p[patchVar] = dataset.data[p.id]; });
+    // for (const patch of this)
+    //   patch[patchVar] = dataset.data[patch.id]
   }
   exportDataSet (patchVar, Type = Array) {
     if (this.isBreedSet()) {
@@ -2460,6 +2428,8 @@ class Patches extends Patches$2 {
   test () { console.log(this.map(patch => patch.id)); }
 }
 
+// import Color from './Color.js'
+
 // Class Patch instances represent a rectangle on a grid.  They hold variables
 // that are in the patches the turtles live on.  The set of all patches
 // is the world on which the turtles live and the model runs.
@@ -2540,7 +2510,25 @@ class Patch$2 {
     return this.patches.patchAtDirectionAndDistance(this, direction, distance)
   }
 
+  // Use the agentset versions so that breeds can be considered.
+  // Otherwise we'd have to use the patch breed just to be consistant.
+  // inRect (patch, dx, dy = dx, meToo = true) {
+  //   return this.patches.inRect(this, dx, dy, meToo)
+  // }
+  // inRadius (radius, meToo = true) { // radius is integer
+  //   return this.patches.inRadius(this, radius, meToo)
+  // }
+  // inCone (radius, coneAngle, direction, meToo = true) {
+  //   return this.patches.inRadius(this, radius, coneAngle, direction, meToo)
+  // }
+
   sprout (num = 1, breed = this.model.turtles, initFcn = (turtle) => {}) {
+    // const turtles = this.model.turtles
+    // return turtles.create(num, (turtle) => {
+    //   turtle.setxy(this.x, this.y)
+    //   if (breed !== turtles) turtle.setBreed(breed)
+    //   initFcn(turtle)
+    // })
     return breed.create(num, (turtle) => {
       turtle.setxy(this.x, this.y);
       initFcn(turtle);
@@ -2664,17 +2652,12 @@ class Turtles extends Turtles$2 {
 class Turtle$2 {
   static defaultVariables () {
     return { // Core variables for turtles.
-      // turtle's position: x, y, z.
-      // Generally z set to constant via turtles.setDefault('z', num)
-      x: 0,
-      y: 0,
+      x: 0,             // x, y, z in patchSize units.
+      y: 0,             // Use turtles.setDefault('z', num) to change default height
       z: 0,
-      // my euclidean direction, radians from x axis, counter-clockwise
-      theta: 0,
-      // What to do if I wander off world. Can be 'clamp', 'wrap'
-      // 'bounce', or a function, see handleEdge() method
-      atEdge: 'clamp'
-
+      theta: 0,         // my euclidean direction, radians from x axis, counter-clockwise
+      atEdge: 'clamp'  // What to do if I wander off world. Can be 'clamp', 'wrap'
+                        // 'bounce', or a function, see handleEdge() method
     }
   }
   // Initialize a Turtle given its Turtles AgentSet.
@@ -2693,12 +2676,15 @@ class Turtle$2 {
   // Factory: create num new turtles at this turtle's location. The optional init
   // proc is called on the new turtle after inserting in its agentSet.
   hatch (num = 1, breed = this.agentSet, init = (turtle) => {}) {
-    return breed.create(num, turtle => {
+    // return this.turtles.create(num, (turtle) => {
+    return breed.create(num, (turtle) => {
       turtle.setxy(this.x, this.y);
+      // turtle.color = this.color // REMIND: sprite vs color
       // hatched turtle inherits parents' ownVariables
       for (const key of breed.ownVariables) {
         if (turtle[key] == null) turtle[key] = this[key];
       }
+      // if (breed !== this.turtles) turtle.setBreed(breed)
       init(turtle);
     })
   }
@@ -2810,6 +2796,16 @@ class Turtle$2 {
   patchAtDirectionAndDistance (direction, distance) {
     return this.model.patches.patchAtDirectionAndDistance(this, direction, distance)
   }
+
+  // // Return turtles/breeds within radius from me
+  // inRadius (radius, meToo = false) {
+  //   return this.agentSet.inRadius(this, radius, meToo)
+  // }
+  // // Return turtles/breeds within cone from me
+  // // Note: agentSet rather than turtles to allow for breeds
+  // inCone (radius, coneAngle, meToo = false) {
+  //   return this.agentSet.inCone(this, radius, coneAngle, this.theta, meToo)
+  // }
 
   // Link methods. Note: this.links returns all links linked to me.
   // See links getter above.
@@ -3531,6 +3527,9 @@ var ThreeMeshes = {
 }
 
 // import SpriteSheet from './SpriteSheet.js'
+// import Stats from '../dist/stats.wrapper.js'
+// import dat from '../dist/dat.gui.wrapper.js'
+
 // window.Meshes = Meshes // REMIND
 
 class ThreeView {
@@ -3543,8 +3542,8 @@ class ThreeView {
       useAxes: useThreeHelpers, // show x,y,z axes
       useGrid: useThreeHelpers, // show x,y plane
       useControls: useThreeHelpers, // navigation. REMIND: control name?
-      useStats: useUIHelpers, // show fps widget
-      useGUI: useUIHelpers, // activate dat.gui UI
+      // useStats: useUIHelpers, // show fps widget
+      // useGUI: useUIHelpers, // activate dat.gui UI
       patches: {
         meshClass: 'PatchesMesh'
       },
@@ -3684,7 +3683,8 @@ class ThreeView {
   }
   initThreeHelpers () {
     const {scene, renderer, camera} = this;
-    const {useAxes, useGrid, useControls, useStats, useGUI} = this;
+    // const {useAxes, useGrid, useControls, useStats, useGUI} = this
+    const {useAxes, useGrid, useControls} = this;
     const {width} = this.model.world;
     const helpers = {};
 
@@ -3700,14 +3700,14 @@ class ThreeView {
     if (useControls) {
       helpers.controls = new THREE.OrbitControls(camera, renderer.domElement);
     }
-    if (useStats) {
-      helpers.stats = new Stats();
-      // This does not work: helpers.stats.dom.style.position = 'absolute'
-      document.body.appendChild(helpers.stats.dom);
-    }
-    if (useGUI) {
-      helpers.gui = new dat.GUI(); // auto adds to body, appendChild not needed
-    }
+    // if (useStats) {
+    //   helpers.stats = new Stats()
+    //   // This does not work: helpers.stats.dom.style.position = 'absolute'
+    //   document.body.appendChild(helpers.stats.dom)
+    // }
+    // if (useGUI) {
+    //   helpers.gui = new dat.GUI() // auto adds to body, appendChild not needed
+    // }
 
     Object.assign(this, helpers);
   }
@@ -3742,8 +3742,7 @@ class Model$2 {
     this.resetModel();
   }
 
-  // ### User Model Creation
-
+// ### User Model Creation
   // A user's model is made by subclassing Model and over-riding these
   // 2 abstract methods. `super` need not be called.
 
@@ -3899,16 +3898,13 @@ class Model extends Model$2 {
       // REMIND: generalize.
       this.view.renderer.render(this.view.scene, this.view.camera);
     }
-    if (this.view.stats) this.view.stats.update();
+    // if (this.view.stats) this.view.stats.update()
   }
 
   // Breeds: create breeds/subarrays of Patches, Agents, Links
   // Unlike resetModel(), it can use CoreAS's; the baseSets
   // have used this module's Patch, Patches, ...
 }
-
-// Based on the mapbox elevation formula:
-// https://blog.mapbox.com/global-elevation-data-6689f1d0ba65
 
 class RGBDataSet extends DataSet {
   static scaleFromMinMax (min, max) {
@@ -3957,4 +3953,4 @@ exports.util = util;
 
 return exports;
 
-}({},THREE,null,Stats,dat));
+}({},THREE));

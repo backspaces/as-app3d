@@ -15,12 +15,6 @@
     "3D",
     "three.js"
   ],
-  "libs": [
-    "node_modules/three/build/three.min.js",
-    "node_modules/three/examples/js/controls/OrbitControls.js",
-    "node_modules/stats.js/build/stats.min.js",
-    "node_modules/dat.gui/build/dat.gui.min.js"
-  ],
   "wraplibs": [
     [
       "libs/three.min.js",
@@ -29,34 +23,21 @@
     [
       "libs/OrbitControls.js",
       "THREE.OrbitControls"
-    ],
-    [
-      "libs/dat.gui.min.js",
-      "dat"
-    ],
-    [
-      "libs/stats.min.js",
-      "Stats"
     ]
   ],
-  "mkdirs": [
-    "dist",
-    "docs/dist",
-    "docs/models",
-    "libs"
-  ],
+  "mkdirs": "dist docs/dist docs/models libs",
+  "libs": "node_modules/three/build/three.min.js node_modules/three/examples/js/controls/OrbitControls.js",
   "scripts": {
-    "clean": "rm -rf `bin/pkgkey.js mkdirs` && mkdir `bin/pkgkey.js mkdirs`",
-    "build": "yarn run clean && yarn run build-libs && yarn run build-dist && yarn run minify && yarn run build-docs",
-    "build-libs": "cp `bin/pkgkey.js libs` libs && bin/wraplibs.js",
+    "clean": "rm -rf $npm_package_mkdirs && mkdir $npm_package_mkdirs",
+    "build": "npm-run-all clean build-libs build-dist minify build-docs",
+    "build-libs": "cp $npm_package_libs libs && bin/wraplibs.js",
     "build-docs": "cp -Rp README.md dist docs && bin/docsmodels.sh",
     "minify": "squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js",
     "build-dist": "rollup -c",
-    "test": "ava --verbose"
+    "test": "ava --verbose",
+    "foo": "env && echo $npm_package_mkdirs"
   },
   "dependencies": {
-    "dat.gui": "^0.6.5",
-    "stats.js": "^0.17.0",
     "three": "^0.89.0"
   },
   "devDependencies": {
@@ -64,6 +45,7 @@
     "ava": "^0.24.0",
     "butternut": "^0.4.6",
     "live-server": "^1.2.0",
+    "npm-run-all": "^4.1.2",
     "puppeteer": "^1.0.0",
     "rollup": "^0.53.1",
     "sane": "^1.6.0",
