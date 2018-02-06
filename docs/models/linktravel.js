@@ -76,3 +76,5 @@ console.log('drivers:', drivers.length)
 util.toWindow({ world, patches, turtles, links, nodes, drivers, model })
 
 model.start()
+
+

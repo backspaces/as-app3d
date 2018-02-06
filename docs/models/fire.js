@@ -77,3 +77,5 @@ model.start()
 // Debugging
 const {world, patches} = model
 util.toWindow({ world, patches, p: patches.oneOf(), model })
+
+

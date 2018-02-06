@@ -7,8 +7,8 @@ const json = JSON.parse(fs.readFileSync('package.json'))
 const libs = json.wraplibs
 
 libs.forEach((lib) => {
-  const [dir, name] = lib
-  const fromPath = dir
+  const [fromPath, name] = lib
+  // const fromPath = dir
 
   // Oops .. minification broke OrbitControls. squash bug. trying uglify
   // Minify vanilla .js files:
@@ -24,7 +24,8 @@ libs.forEach((lib) => {
   const toPath = fromPath
     .replace(/\.min\.js$/, '.js')
     .replace(/\.js$/, '.wrapper.js')
-    .replace('libs/', 'dist/')
+    // .replace('libs/', 'dist/')
+    .replace(/^.*\//, 'dist/')
 
   console.log('wraplibs:', fromPath, name, toPath)
   // Run wraplib

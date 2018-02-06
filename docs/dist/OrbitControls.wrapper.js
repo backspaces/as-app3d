@@ -1051,7 +1051,7 @@ Object.defineProperties( THREE.OrbitControls.prototype, {
 }
 
 const result = window.THREE.OrbitControls
-if (!result) throw Error("wrapper failed, file: libs/OrbitControls.js name: THREE.OrbitControls")
-console.log('wraplib libs/OrbitControls.js THREE.OrbitControls', typeof window.THREE.OrbitControls)
+if (!result) throw Error("wrapper failed, file: node_modules/three/examples/js/controls/OrbitControls.js name: THREE.OrbitControls")
+console.log('wraplib node_modules/three/examples/js/controls/OrbitControls.js THREE.OrbitControls', typeof window.THREE.OrbitControls)
 
 export default result

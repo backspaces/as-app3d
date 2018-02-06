@@ -924,7 +924,7 @@ this.domElement=document.createElementNS("http://www.w3.org/1999/xhtml","canvas"
 }
 
 const result = window.THREE
-if (!result) throw Error("wrapper failed, file: libs/three.min.js name: THREE")
-console.log('wraplib libs/three.min.js THREE', typeof window.THREE)
+if (!result) throw Error("wrapper failed, file: node_modules/three/build/three.min.js name: THREE")
+console.log('wraplib node_modules/three/build/three.min.js THREE', typeof window.THREE)
 
 export default result

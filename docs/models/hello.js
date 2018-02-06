@@ -40,3 +40,5 @@ model.start()
 util.toWindow({ ColorMap, Model, util })
 const { patches, turtles, links } = model
 util.toWindow({ patches, turtles, links, model })
+
+

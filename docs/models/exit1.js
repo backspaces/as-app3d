@@ -1,6 +1,5 @@
 import {ColorMap, Model, util, dat} from '../dist/AS.module.js'
 // /* eslint-disable */
-import dat from 'https://unpkg.com/dat.gui/build/dat.gui.module.js'
 
 util.toWindow({ ColorMap, Model, util, dat })
 
@@ -282,3 +281,5 @@ console.log(`exits: ${exits.length},`,
 // model.floodFill(0)
 // exits.ask(exit => { model.showFlood(exit) })
 // model.showAllFloods()
+
+

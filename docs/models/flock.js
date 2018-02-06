@@ -111,3 +111,5 @@ console.log('patches:', model.patches.length)
 console.log('turtles:', model.turtles.length)
 const {world, patches, turtles} = model
 util.toWindow({ world, patches, turtles, model })
+
+
