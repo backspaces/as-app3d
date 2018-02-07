@@ -33,7 +33,8 @@
     "build-dist": "rollup -c",
     "build-docs": "shx cp -R README.md dist docs && node bin/docsmodels.js",
     "minify": "squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js",
-    "test": "ava --verbose"
+    "test": "ava --verbose",
+    "foo": "files='one \"two three\"' && shx echo $files"
   },
   "dependencies": {
     "three": "^0.89.0"
@@ -48,6 +49,7 @@
     "puppeteer": "^1.0.0",
     "rollup": "^0.53.1",
     "sane": "^1.6.0",
-    "shelljs": "^0.8.0"
+    "shelljs": "^0.8.0",
+    "shx": "^0.2.2"
   }
 }
