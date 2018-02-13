@@ -29,5 +29,5 @@ libs.forEach((lib) => {
 
   console.log('wraplibs:', fromPath, name, toPath)
   // Run wraplib
-  exec(`bin/wraplib.js ${fromPath} ${name} > ${toPath}`)
+  exec(`node bin/wraplib.js ${fromPath} ${name} > ${toPath}`)
 })
