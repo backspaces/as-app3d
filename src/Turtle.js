@@ -1,6 +1,7 @@
-import util from '../node_modules/as-core/src/util.js'
+// import util from '../node_modules/as-core/src/util.js'
+// import CoreTurtle from '../node_modules/as-core/src/Turtle.js'
 import Color from './Color.js'
-import CoreTurtle from '../node_modules/as-core/src/Turtle.js'
+import {util, Turtle as CoreTurtle} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
 
 // Flyweight object creation, see Patch/Patches.
 

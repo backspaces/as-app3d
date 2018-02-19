@@ -1,5 +1,5 @@
-// import AgentSet from '../node_modules/as-core/src/AgentSet.js'
-import CoreLinks from '../node_modules/as-core/src/Links.js'
+import {Links as CoreLinks} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+// import CoreLinks from '../node_modules/as-core/src/Links.js'
 
 // Links are a collection of all the Link objects between turtles.
 // class Links extends AgentSet {

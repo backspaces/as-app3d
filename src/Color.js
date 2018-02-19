@@ -2,7 +2,8 @@
 // colors, webgl and canvas2d Uint8ClampedArray r,g,b,a arrays.
 // Notice a JavaScript Array is **not** a color!
 
-import util from '../node_modules/as-core/src/util.js'
+// import util from '../node_modules/as-core/src/util.js'
+import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
 
 const Color = {
 

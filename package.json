@@ -1,14 +1,19 @@
 {
-  "name": "asx",
-  "version": "v0.3.0",
-  "description": "AgentScript, 2nd Edition",
-  "homepage": "http://backspaces.github.io/asx/",
-  "main": "src/app.js",
+  "name": "@redfish/as-app3d",
+  "version": "0.3.0",
+  "description": "AgentScript, Model + View application",
   "author": "Owen Densmore",
+  "homepage": "http://backspaces.github.io/as-app3d/",
   "license": "GPL-3.0",
+  "main": "dist/as-app3d.umd.js",
+  "module": "dist/as-app3d.esm.js",
+  "files": [
+    "dist",
+    "docs"
+  ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/backspaces/asx.git"
+    "url": "git://github.com/backspaces/as-app3d.git"
   },
   "keywords": [
     "netlogo",
@@ -32,7 +37,7 @@
     "build-libs": "node bin/wraplibs.js",
     "build-dist": "rollup -c",
     "build-docs": "shx cp -R README.md dist docs && node bin/docsmodels.js",
-    "minify": "squash dist/AS.js > dist/AS.min.js && squash dist/AS.module.js > dist/AS.module.min.js",
+    "minify": "squash dist/as-app3d.umd.js > dist/as-app3d.umd.min.js && squash dist/as-app3d.esm.js > dist/as-app3d.esm.min.js",
     "test": "ava --verbose",
     "foo": "files='one \"two three\"' && shx echo $files"
   },
@@ -40,7 +45,7 @@
     "three": "^0.89.0"
   },
   "devDependencies": {
-    "as-core": "github:backspaces/as-core",
+    "@redfish/agentscript": "^0.1.0",
     "ava": "^0.24.0",
     "butternut": "^0.4.6",
     "cross-env": "^5.1.3",

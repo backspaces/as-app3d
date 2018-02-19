@@ -1,5 +1,6 @@
 import Color from './Color.js'
-import util from '../node_modules/as-core/src/util.js'
+// import util from '../node_modules/as-core/src/util.js'
+import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
 
 // Sprites are images/drawings within a sprite-sheet.
 class SpriteSheet {

@@ -1,6 +1,6 @@
 import ColorMap from '../src/ColorMap.js'
 import Model from '../src/Model.js'
-import util from '../node_modules/as-core/src/util.js'
+import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
 
 class Hello extends Model {
   // Inherit default constructor.
@@ -8,6 +8,7 @@ class Hello extends Model {
   setup () {
     this.patches.ask(p => {
       p.color = ColorMap.LightGray.randomColor()
+      // If we don't set color, patches are transparent.
     })
 
     this.turtles.setDefault('atEdge', 'bounce')
@@ -20,9 +21,8 @@ class Hello extends Model {
     })
 
     this.turtles.ask(t => {
-      this.links.create(t, this.turtles.otherOneOf(t), (link) => {
-        link.color = this.randomColor() // Uses Model's colormap
-      })
+      this.links.create(t, this.turtles.otherOneOf(t))
+      // If we don't set color, a random color will be used
     })
   }
 

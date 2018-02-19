@@ -1,5 +1,6 @@
-import util from '../node_modules/as-core/src/util.js'
-import CorePatches from '../node_modules/as-core/src/Patches.js'
+// import util from '../node_modules/as-core/src/util.js'
+// import CorePatches from '../node_modules/as-core/src/Patches.js'
+import {util, Patches as CorePatches} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
 
 // See CorePatches for the patches architecture
 class Patches extends CorePatches {

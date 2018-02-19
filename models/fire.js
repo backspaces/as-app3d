@@ -1,7 +1,7 @@
 import Color from '../src/Color.js'
 import ColorMap from '../src/ColorMap.js'
 import Model from '../src/Model.js'
-import util from '../node_modules/as-core/src/util.js'
+import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
 
 util.toWindow({ Color, ColorMap, Model, util })
 

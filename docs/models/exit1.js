@@ -1,5 +1,6 @@
-import {ColorMap, Model, util, dat} from '../dist/AS.module.js'
+import {ColorMap, Model, util} from '../dist/as-app3d.esm.js'
 // /* eslint-disable */
+import dat from 'https://unpkg.com/dat.gui/build/dat.gui.module.js'
 
 util.toWindow({ ColorMap, Model, util, dat })
 

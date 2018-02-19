@@ -12,8 +12,6 @@
     "prefer-const": [ 2 ]
   },
   "globals": {
-    "THREE": false,
-    "dat": false,
-    "Stats": false
+    "THREE": false
   }
 }

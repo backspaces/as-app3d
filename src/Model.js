@@ -1,4 +1,4 @@
-import World from '../node_modules/as-core/src/World.js'
+// import World from '../node_modules/as-core/src/World.js'
 import Color from './Color.js'
 import ColorMap from './ColorMap.js'
 import Patches from './Patches.js'
@@ -11,8 +11,10 @@ import Animator from './Animator.js'
 import SpriteSheet from './SpriteSheet.js'
 import ThreeView from './ThreeView.js'
 import ThreeMeshes from './ThreeMeshes.js'
-import util from '../node_modules/as-core/src/util.js'
-import CoreModel from '../node_modules/as-core/src/Model.js'
+// import util from '../node_modules/as-core/src/util.js'
+// import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+import {util, World, Model as CoreModel} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+// import CoreModel from '../node_modules/as-core/src/Model.js'
 
 // Class Model is the primary interface for modelers, integrating
 // all the parts of a model. It also contains NetLogo's `observer` methods.

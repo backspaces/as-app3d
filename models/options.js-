@@ -2,7 +2,9 @@
 // Generally the default QuadSprites needs no setup.
 // This is for users wanting to use Points and monochrome meshes.
 
-import {ColorMap, Model, util} from '../dist/AS.module.js'
+import ColorMap from '../src/ColorMap.js'
+import Model from '../src/Model.js'
+import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
 
 util.toWindow({ ColorMap, Model, util })
 
@@ -98,15 +100,15 @@ class OptionsModel extends Model {
     this.turtles.create(1000, (t) => {
       t.size = 0.5 // half a patch in size
       t.speed = util.randomFloat2(0.01, 0.05) // 0.5 + Math.random()
-      t.color = this.turtles.randomColor()
     })
 
     // Create links. Warn if issues.
     util.repeat(100, (i, a) => {
       const turtles = this.turtles.nOf(2)
-      this.links.create(turtles[0], turtles[1], (link) => {
-        link.color = this.links.randomColor()
-      })
+      this.links.create(turtles[0], turtles[1])
+      // this.links.create(turtles[0], turtles[1], (link) => {
+      //   link.color = this.links.randomColor()
+      // })
     })
   }
   step () {

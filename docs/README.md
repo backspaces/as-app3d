@@ -1,63 +1,54 @@
-# AgentScript-next Repository
+# as-app3d: AgentScript Three.js App
 
-This is a repository for the next version of the [AgentScript 1.0](http://agentscript.org) Agent Based Modeling framework, converted into an es6 module based project using Three.js.
+This is an app or framework for [AgentScript](https://github.com/backspaces/agentscript). AgentScript itself has no View, it is Model only, in a Model/View architecture. Here we add a tightly integrated Three.js View by extending AgentScript via subclassing
+
+Because this contains both a Model and View, as-app3d is more like [NetLogo](https://ccl.northwestern.edu/netlogo/) who's semantics AgentScript is based on.
+
+Note: Our future plan is a suite of several Views which are less tightly bound to AgentScript. The Three version will be as-view3d.
+
+## Dual Build
+
+as-app3d is based on es6 Modules (ESM) which are delivered as two [Rollup](https://rollupjs.org/) bundles:
+
+```
+* UMD: as-app3d.umd.js
+* ESM: as-app3d.esm.js
+```
+
+The UMD can be used in the browser as a `<script>` tag, and in Node using `require()`
+
+The ESM is used in es6 import statements.
+
+Both are available in minified form. All are in the project's `dist/` directory.
+
+## NPM Package
+as-app3d is available as a npm *scoped* package: @redfish/as-app3d.
+
+To install the package, `yarn add @redfish/as-app3d`. This places the bundles in `node_modules/@redfish/as-app3d/dist`
+
+To use the package as a CDN, use [unpkg.com](https://unpkg.com/).
+* UMD: [https://unpkg.com/@redfish/as-app3d](https://unpkg.com/@redfish/as-app3d)
+* ESM: [https://unpkg.com/@redfish/as-app3d?module](https://unpkg.com/@redfish/as-app3d?module)
 
 ## Developer Information
 
-To clone a fresh repo, for PRs or your own local verson:
-* cd to where you want the asx/ dir to appear.
-* git clone https://github.com/backspaces/asx # create skeleton repo
-* cd asx # go to new repo
-* npm install # install all dev dependencies
-* npm run build # complete the install
-* open `http://<path to asx>/models` to run a model. Check console for messages
+To clone the github repo:
+* cd to where you want the as-app3d/ dir to appear.
+* git clone https://github.com/backspaces/as-app3d
+* cd as-app3d # go to new repo
+* yarn install # install all dev dependencies
+* yarn build # complete the install
 
-All workflow is npm run scripts.  See package.json's scripts, or simply run `npm run` for a list. [JavaScript Standard Style](https://standardjs.com/) is [used](https://github.com/backspaces/asx/blob/master/.eslintrc.json).
-
-The repo has no "derived" files, other than the gh-page, see below, i.e. won't run by just cloning. To complete the install, use `npm install` and `npm run build` which refreshes npm dependencies and does a clean build of the repo.
+All workflow is npm run scripts.  See package.json's scripts, or use `yarn run` for a list. [JavaScript Standard Style](https://standardjs.com/) is [used](https://github.com/backspaces/as-app3d/blob/master/.eslintrc.json).
 
 ## Github Pages
 
-A [gh-page](http://backspaces.github.io/asx/) is used for the site. It contains the master repo, including the derived files, and is our documentation.
+A [gh-page](http://backspaces.github.io/as-app3d/) is used for the site. It contains the dist/ dir as a models/ dir with sample models also used for testing.
 
-It uses [the docs/ simplification](https://help.github.com/articles/user-organization-and-project-pages/#project-pages) for gh-page creation. We use [Docsify](https://docsify.js.org/#/?id=docsify), a dynamic markdown based documentation system, which you'll see when you go to the gh-page.
+It uses [the docs/ simplification](https://help.github.com/articles/user-organization-and-project-pages/#project-pages) for gh-page creation.
 
-The gh-page can be used to run example models:
-* [http://backspaces.github.io/asx/models?diffuse](http://backspaces.github.io/asx/models?diffuse)
-
-And as a CDN for modules and legacy bundles, see [**Modules and Bundles**](#modules-and-bundles) below.
-
-## Three.js
-
-We have converted from layers of 2D canvases to a single WebGL canvas, currently managed by [Three.js](https://threejs.org/). This is a breaking change, primarily changing subclassing of class Model. Each of the prior layers is now a single Three Mesh within the Three scene graph.
-
-To configure the Three parameters, we've introduced a second configuration object for renderers. The Model constructor thus is:
-
-```
-// The Model constructor takes a DOM div and model and renderer options.
-// Default values are given for all constructor arguments.
-constructor (div = document.body,
-             modelOptions = Model.defaultWorld(),
-             rendererOptions = Model.defaultRenderer()) {
-```
-
-The conversion of the [fire](http://backspaces.github.io/asx/models?fire) model, [source here](https://github.com/backspaces/asx/blob/master/models/src/fire.js), is an example of the minor changes needed in converting to Three.js.
-
-## Modules and Bundles
-
-ASX is an entirely es6 Modules based, dual deploy. By "dual" we mean that we support es6 Modules, along with legacy `<script>` tags, both in our models/index.html files and the individual demo models.
-
-The dist/ dir includes both a [Rollup](https://rollupjs.org/) generated legacy [IIFE](http://adripofjavascript.com/blog/drips/an-introduction-to-iffes-immediately-invoked-function-expressions.html) global, window.AS, for script users, and the AS/ dir of the modules for direct native module implementations (Canary, Edge, FFox Nightly, iOS Safari and Safari Technology Preview), see the [CanIUse](http://caniuse.com/#search=modules) page for current browser support.
-
-It can also be used as a CDN for all the es6 Modules:
-
-* `import Model from` '[http://backspaces.github.io/asx/dist/AS/Model.js](http://backspaces.github.io/asx/dist/AS/Model.js)'
-
-The es6 modules are also available as a single Rollup es6 Module bundle
-* `import {ColorMap, Model, util} from` '[http://backspaces.github.io/asx/dist/AS.module.js](http://backspaces.github.io/asx/dist/AS.module.js)'
-
-Finally, they are also available as a traditional legacy IIFE Rollup bundle:
-* `<script src="`[http://backspaces.github.io/asx/dist/AS.js](http://backspaces.github.io/asx/dist/AS.js)`"></script>`
+The gh-page can be used as a CDN our sample models. The fire model can be run with:
+> http://backspaces.github.io/as-app3d/models?fire
 
 
 ## Files
@@ -65,31 +56,19 @@ Finally, they are also available as a traditional legacy IIFE Rollup bundle:
 Our directory layout is:
 ```
 bin: workflow scripts
-dist: AS.js & AS.module.js bundles & AS/ es6 source.
+dist: the umd and esm bundles with their min.js versions.
 docs: gh-page
-models: sample models
-src: es6 modules for AS
+models: sample models used for tests and demos
+src: individual as-app3d es6 modules
+test: test files
 ```
-
-Within models/ are src/ (es6 modules) and scripts/ (legacy) and an index.html which runs the src/scripts files as a query string/REST. Both index.html files have a default model if no query string given.
-
-There are currently two ways to run a sample model: es6 modules (src/) or legacy scripts (scripts/), the former runs only in browsers supporting modules (see above):
-
-* [http://backspaces.github.io/asx/models?scripts/fire](http://backspaces.github.io/asx/models?scripts/fire)
-* [http://backspaces.github.io/asx/models?src/fire](http://backspaces.github.io/asx/models?src/fire)
-
-The default directory is scripts/ for now, but will convert to es6 modules, src/, when widely supported. This url will use the default:
-
-* [http://backspaces.github.io/asx/models?fire](http://backspaces.github.io/asx/models?fire)
-
-The current sample models are: diffuse, exit, fire, links, turtles
 
 ## License
 
 Copyright Owen Densmore, RedfishGroup LLC, 2012-2017<br>
-AgentScript may be freely distributed under the GPLv3 license:
+as-app3d may be freely distributed under the GPLv3 license:
 
-AgentScript is free software: you can redistribute it and/or modify
+as-app3d is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.

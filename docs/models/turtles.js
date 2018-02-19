@@ -1,4 +1,4 @@
-import {ColorMap, Model, util} from '../dist/AS.module.js'
+import {ColorMap, Model, util} from '../dist/as-app3d.esm.js'
 
 util.toWindow({ ColorMap, Model, util })
 
