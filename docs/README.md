@@ -21,6 +21,8 @@ The ESM is used in es6 import statements.
 
 Both are available in minified form. All are in the project's `dist/` directory.
 
+The UMD's global name is `ASapp3d`
+
 ## NPM Package
 as-app3d is available as a npm *scoped* package: @redfish/as-app3d.
 
