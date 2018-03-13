@@ -1,5 +1,5 @@
 import Color from './Color.js'
-import {Patch as CorePatch} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+import {Patch as CorePatch} from '../agentscript/agentscript.esm.js'
 
 // import CorePatch from '../node_modules/as-core/src/Patch.js'
 

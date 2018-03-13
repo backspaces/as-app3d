@@ -1,5 +1,5 @@
 // import util from '../node_modules/as-core/src/util.js'
-import {util, Link as CoreLink} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+import {util, Link as CoreLink} from '../agentscript/agentscript.esm.js'
 import Color from './Color.js'
 // import CoreLink from '../node_modules/as-core/src/Link.js'
 

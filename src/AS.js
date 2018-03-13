@@ -10,7 +10,7 @@ import {AgentArray,
         DataSet,
         RGBDataSet,
         World,
-        util}          from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+        util}          from '../agentscript/agentscript.esm.js'
 import Animator        from './Animator.js'
 import Color           from './Color.js'
 import ColorMap        from './ColorMap.js'

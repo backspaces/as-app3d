@@ -5,7 +5,7 @@
 // GLSL "Uniform" variable TypedArray for colors.
 
 // import util from '../node_modules/as-core/src/util.js'
-import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+import {util} from '../agentscript/agentscript.esm.js'
 import Color from './Color.js'
 
 const ColorMap = {

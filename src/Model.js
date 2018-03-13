@@ -12,8 +12,8 @@ import SpriteSheet from './SpriteSheet.js'
 import ThreeView from './ThreeView.js'
 import ThreeMeshes from './ThreeMeshes.js'
 // import util from '../node_modules/as-core/src/util.js'
-// import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
-import {util, World, Model as CoreModel} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+// import {util} from '../agentscript/agentscript.esm.js'
+import {util, World, Model as CoreModel} from '../agentscript/agentscript.esm.js'
 // import CoreModel from '../node_modules/as-core/src/Model.js'
 
 // Class Model is the primary interface for modelers, integrating

@@ -1,4 +1,4 @@
-import {util, Turtles as CoreTurtles} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+import {util, Turtles as CoreTurtles} from '../agentscript/agentscript.esm.js'
 
 // See CoreTurtles for architecture
 class Turtles extends CoreTurtles {

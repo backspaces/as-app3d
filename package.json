@@ -1,6 +1,6 @@
 {
   "name": "@redfish/as-app3d",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AgentScript, Model + View application",
   "author": "Owen Densmore",
   "homepage": "http://backspaces.github.io/as-app3d/",
@@ -8,8 +8,7 @@
   "main": "dist/as-app3d.umd.js",
   "module": "dist/as-app3d.esm.js",
   "files": [
-    "dist",
-    "docs"
+    "dist"
   ],
   "repository": {
     "type": "git",
@@ -30,11 +29,12 @@
       "THREE.OrbitControls"
     ]
   ],
-  "mkdirs": "dist docs/dist docs/models",
+  "mkdirs": "dist agentscript docs/dist docs/models",
   "scripts": {
     "clean": "cross-env-shell \"shx rm -rf $npm_package_mkdirs && shx mkdir $npm_package_mkdirs\"",
-    "build": "npm-run-all clean build-libs build-dist minify build-docs",
+    "build": "npm-run-all clean build-as build-libs build-dist minify build-docs",
     "build-libs": "node bin/wraplibs.js",
+    "build-as": "shx cp node_modules/@redfish/agentscript/dist/* agentscript",
     "build-dist": "rollup -c",
     "build-docs": "shx cp -R README.md dist docs && node bin/docsmodels.js",
     "minify": "squash dist/as-app3d.umd.js > dist/as-app3d.umd.min.js && squash dist/as-app3d.esm.js > dist/as-app3d.esm.min.js",
@@ -44,8 +44,12 @@
   "dependencies": {
     "three": "^0.89.0"
   },
+  "two agentscript sources: github & npm": {
+    "agentscript": "backspaces/agentscript",
+    "@redfish/agentscript": "latest"
+  },
   "devDependencies": {
-    "@redfish/agentscript": "^0.1.0",
+    "@redfish/agentscript": "latest",
     "ava": "^0.24.0",
     "butternut": "^0.4.6",
     "cross-env": "^5.1.3",

@@ -1,6 +1,6 @@
 // import SpriteSheet from './SpriteSheet.js'
 // import util from '../node_modules/as-core/src/util.js'
-import {util} from '../node_modules/@redfish/agentscript/dist/agentscript.esm.js'
+import {util} from '../agentscript/agentscript.esm.js'
 import ThreeMeshes from './ThreeMeshes.js'
 
 import THREE from '../dist/three.wrapper.js'
