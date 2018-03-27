@@ -35,7 +35,6 @@ class ButtonsModel extends Model {
 
     if (vertices.size > this.clusterSize) {
       this.clusterSize = vertices.size
-      console.log(`New largest cluster: size: ${vertices.size} tick: ${this.anim.ticks}`)
       console.log('New largest cluster: size:' + vertices.size +
         ' tick:' + this.anim.ticks + ' fps:' + this.anim.fps)
       if (this.clusterSize === this.turtles.length) {
