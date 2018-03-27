@@ -95,7 +95,7 @@ class ExitModel extends Model {
 
     // Fix obstacles: no singletons, remove unreachable
     this.obstacles.ask(p => {
-      const n = p[UI.NeighborType].with(p => p.breed === this.inside)
+      const n = p[UI.NeighborType].filter(p => p.breed === this.inside)
       if (UI.NeighborType === 'neighbors' && n.length >= 7) { // 7-8 nieghbors
         const p = n.oneOf() // nOf(9 - n.length)?
         p.setBreed(this.obstacles)
@@ -103,14 +103,14 @@ class ExitModel extends Model {
     })
     this.exits.ask(p => {
       p.neighbors4
-        .with(p => p.breed === this.obstacles)
+        .filter(p => p.breed === this.obstacles)
         .ask(p => { p.setBreed(this.inside); console.log('blocked', p) })
     })
 
     this.exits.ask(exit => { this.floodFill(exit) })
 
     const b4 = this.obstacles.length
-    this.inside.with(p => p.flood0 === -1).ask(p => {
+    this.inside.filter(p => p.flood0 === -1).ask(p => {
       p.setBreed(this.obstacles)
     })
     console.log('fixed unreachable:', this.obstacles.length - b4)
@@ -158,7 +158,7 @@ class ExitModel extends Model {
       const pnext = new Set()
       for (const p of pset) { p[flood] = distance }
       for (const p of pset) {
-        const next = p[UI.NeighborType].with(p => p[flood] === -1)
+        const next = p[UI.NeighborType].filter(p => p[flood] === -1)
         for (const p of next) { pnext.add(p) }
       }
 
@@ -177,14 +177,14 @@ class ExitModel extends Model {
 
   // Return the neighbors of this turtle that are "empty"
   insideNeighbors (turtle) {
-    return turtle.patch[UI.NeighborType].with(n =>
+    return turtle.patch[UI.NeighborType].filter(n =>
       n.breed !== this.wall &&
       n.breed !== this.obstacles
     )
   }
   availablePatches (turtle) {
     return this.insideNeighbors(turtle)
-      .with(n => n.turtlesHere().length === 0)
+      .filter(n => n.turtlesHere().length === 0)
   }
   availableTurtles (turtle) {
     return this.turtles.inPatches(this.insideNeighbors(turtle))
@@ -195,7 +195,7 @@ class ExitModel extends Model {
     if (UI.UseFlood) {
       const flood = turtle.exit.floodVar
       const turtleFlood = turtle.patch[flood]
-      const minSet = available.with(n => turtleFlood > n[flood])
+      const minSet = available.filter(n => turtleFlood > n[flood])
       if (minSet.length > 0) return minSet.oneOf()
     } else {
       const min = available.minOneOf(n => n.distance(turtle.exit))
@@ -209,7 +209,7 @@ class ExitModel extends Model {
     if (!UI.Squeeze) return null
     const available = this.availableTurtles(turtle)
     if (available.length === 0) return null
-    const best = available.with(t =>
+    const best = available.filter(t =>
       t.exit !== turtle.exit &&
       this.toExitAt(turtle, t.patch) < this.toExit(turtle) &&
       this.toExitAt(t, turtle.patch) < this.toExit(t)

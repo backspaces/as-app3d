@@ -61,6 +61,7 @@ class Animator {
     const dt = this.draws - this.startDraw
     return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms())
   }
+  get fps () { return Math.max(this.drawsPerSec(), this.ticksPerSec()) }
   // Return a status string for debugging and logging performance
   toString () {
     return `ticks: ${this.ticks}, draws: ${this.draws}, rate: ${this.rate} tps/dps: ${this.ticksPerSec()}/${this.drawsPerSec()}`

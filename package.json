@@ -34,10 +34,11 @@
     "clean": "cross-env-shell \"shx rm -rf $npm_package_mkdirs && shx mkdir $npm_package_mkdirs\"",
     "build": "npm-run-all clean build-as build-libs build-dist minify build-docs",
     "build-libs": "node bin/wraplibs.js",
-    "build-as": "shx cp node_modules/@redfish/agentscript/dist/* agentscript",
+    "build-as": "shx cp node_modules/*/*/dist/* agentscript",
     "build-dist": "rollup -c",
     "build-docs": "shx cp -R README.md dist docs && node bin/docsmodels.js",
     "minify": "squash dist/as-app3d.umd.js > dist/as-app3d.umd.min.js && squash dist/as-app3d.esm.js > dist/as-app3d.esm.min.js",
+    "cp-as": "cd ../agentscript && npm run build-dist && cd ../as-app3d && shx cp ../agentscript/dist/* agentscript && npm run build-dist",
     "test": "ava --verbose",
     "foo": "files='one \"two three\"' && shx echo $files"
   },
@@ -45,11 +46,13 @@
     "three": "^0.89.0"
   },
   "two agentscript sources: github & npm": {
+    "build-as": "shx cp node_modules/agentscript/docs/dist/* agentscript",
+    "build-as": "shx cp node_modules/@redfish/agentscript/dist/* agentscript",
     "agentscript": "backspaces/agentscript",
     "@redfish/agentscript": "latest"
   },
   "devDependencies": {
-    "@redfish/agentscript": "latest",
+    "agentscript": "backspaces/agentscript",
     "ava": "^0.24.0",
     "butternut": "^0.4.6",
     "cross-env": "^5.1.3",
