@@ -1,4 +1,4 @@
-import {ColorMap, Model, AgentArray,} from '../dist/as-app3d.esm.js'
+import {ColorMap, Model, AgentArray, RGBDataSet, util} from '../dist/as-app3d.esm.js'
 // import {AgentArray, ColorMap, DataSet, Model, RGBDataSet, World, util}
 //  from '../dist/as-app3d.esm.js'
 

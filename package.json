@@ -34,7 +34,7 @@
     "clean": "cross-env-shell \"shx rm -rf $npm_package_mkdirs && shx mkdir $npm_package_mkdirs\"",
     "build": "npm-run-all clean build-as build-libs build-dist minify build-docs",
     "build-libs": "node bin/wraplibs.js",
-    "build-as": "shx cp node_modules/*/*/dist/* agentscript",
+    "build-as": "yarn upgrade agentscript && shx cp node_modules/*/*/dist/* agentscript",
     "build-dist": "rollup -c",
     "build-docs": "shx cp -R README.md dist docs && node bin/docsmodels.js",
     "minify": "squash dist/as-app3d.umd.js > dist/as-app3d.umd.min.js && squash dist/as-app3d.esm.js > dist/as-app3d.esm.min.js",

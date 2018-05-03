@@ -4,12 +4,13 @@ const shell = require('shelljs')
 
 const paths = shell.ls('models/*.js')
 
-paths.forEach((path) => {
+paths.forEach(path => {
   // First create a comma separated list of module names for this path
   const importNames = shell
     .grep(/^import.*from '\./, path) // get local import statements in this path
     .sed(/^import *{*/, '') // get the name of the import. Note {util} -> util
-    .sed(/}* .*$/, ',')
+    .sed(/}* *from.*$/, ',')
+    // .sed(/} .*$/, ',')
     .replace(/\n/g, ' ') // join the multiple names
     .replace(/, *$/, '') // remove final comma
 

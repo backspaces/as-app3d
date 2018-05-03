@@ -24,7 +24,7 @@ function wait (seconds = 1) {
 
 models.forEach(async model => {
   await test.serial(model, async t => {
-    const url = `http://127.0.0.1:8080/models/?${model}`
+    const url = `http://127.0.0.1:8080/docs/models/?${model}`
     console.log('testing:', model, url)
     const browser = await puppeteer.launch({headless: false})
     // console.log('browser')
