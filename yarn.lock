@@ -67,7 +67,7 @@ agent-base@^4.1.0:
 
 agentscript@backspaces/agentscript:
   version "0.2.0"
-  resolved "https://codeload.github.com/backspaces/agentscript/tar.gz/e014ee892411379a133ec4ac1ae318bc1807f6f8"
+  resolved "https://codeload.github.com/backspaces/agentscript/tar.gz/9d209908fd29e5bbc172c9039cc293a160547f28"
 
 ansi-align@^2.0.0:
   version "2.0.0"
