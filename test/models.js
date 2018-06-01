@@ -24,7 +24,7 @@ function wait(seconds = 1) {
 }
 
 // window/viewport size: https://github.com/GoogleChrome/puppeteer/issues/1183
-const [width, height] = [500, 500]
+const [width, height] = [500, 600]
 models.forEach(async model => {
     await test.serial(model, async t => {
         const url = `http://127.0.0.1:8080/docs/models/?${model}`
