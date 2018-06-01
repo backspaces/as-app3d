@@ -23,13 +23,23 @@ function wait(seconds = 1) {
     })
 }
 
+// window/viewport size: https://github.com/GoogleChrome/puppeteer/issues/1183
+const [width, height] = [500, 500]
 models.forEach(async model => {
     await test.serial(model, async t => {
         const url = `http://127.0.0.1:8080/docs/models/?${model}`
         console.log('testing:', model, url)
-        const browser = await puppeteer.launch({ headless: false })
+        const browser = await puppeteer.launch({
+            args: [
+                '--user-agent=Puppeteer',
+                `--window-size=${width},${height}`,
+            ],
+            headless: false,
+        })
         // console.log('browser')
         const page = await browser.newPage()
+        await page.setViewport({ width, height })
+
         // console.log('page')
         await page.goto(url)
         console.log('waiting 4 seconds') // works! lets model run n seconds
