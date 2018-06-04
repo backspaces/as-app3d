@@ -1,6 +1,6 @@
 {
   "name": "@redfish/as-app3d",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "AgentScript, Model + View application",
   "author": "Owen Densmore",
   "homepage": "http://backspaces.github.io/as-app3d/",
