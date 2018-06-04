@@ -52,6 +52,11 @@ It uses [the docs/ simplification](https://help.github.com/articles/user-organiz
 The gh-page hosts our sample models. The fire model can be run with:
 > http://backspaces.github.io/as-app3d/models?fire
 
+The Github page can be used as a CDN for experimental use:
+
+*   UMD: [https://backspaces.github.io/as-app3d/dist/as-app3d.umd.js](https://backspaces.github.io/agentscript/dist/agentscript.umd.js)
+*   ESM: [https://backspaces.github.io/as-app3d/dist/as-app3d.esm.js](https://backspaces.github.io/as-app3d/dist/as-app3d.esm.js)
+
 
 ## Files
 
