@@ -32,6 +32,8 @@ To use the package as a CDN, use [unpkg.com](https://unpkg.com/).
 * UMD: [https://unpkg.com/@redfish/as-app3d](https://unpkg.com/@redfish/as-app3d)
 * ESM: [https://unpkg.com/@redfish/as-app3d?module](https://unpkg.com/@redfish/as-app3d?module)
 
+View the unpkg.dashboard: [https://unpkg.com/@redfish/as-app3d/](https://unpkg.com/@redfish/as-app3d/)
+
 ## Developer Information
 
 To clone the github repo:
