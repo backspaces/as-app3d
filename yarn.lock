@@ -66,8 +66,8 @@ agent-base@^4.1.0:
     es6-promisify "^5.0.0"
 
 agentscript@backspaces/agentscript:
-  version "0.2.0"
-  resolved "https://codeload.github.com/backspaces/agentscript/tar.gz/31103ab632c656caba1fec1b34a1c769a1cfa44d"
+  version "0.3.0"
+  resolved "https://codeload.github.com/backspaces/agentscript/tar.gz/d1b7377ca3fb4a904bec53be96804e01c25dc17e"
 
 ansi-align@^2.0.0:
   version "2.0.0"
