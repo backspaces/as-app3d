@@ -72,6 +72,23 @@ src: individual as-app3d es6 modules
 test: test files
 ```
 
+## Models
+
+The models/ dir contains very, _very_ simple models used for testing (via [Puppeteer](https://github.com/GoogleChrome/puppeteer)) and for documentation. For example:
+
+* [Hello World](https://backspaces.github.io/as-app3d/models/?hello): Simple "hello world" model with patches, turtles, links.
+
+All models have a single html file using a query string to specify the model. So the above has https://backspaces.github.io/as-app3d/models/?hello for it's url.
+
+* [ants](https://backspaces.github.io/as-app3d/models/?ants) A simple ant pheromone model.
+* [buttons](https://backspaces.github.io/as-app3d/models/?buttons) Stu Kauffman's famous non-linear behavior of random linking of pairs of buttons in a pile.
+* [diffuse](https://backspaces.github.io/as-app3d/models/?diffuse) Diffusion of a variable on a patch grid, with two random walker turtles adding to the variable over time.
+* [exit](https://backspaces.github.io/as-app3d/models/?exit) Turtles exiting random openings in a surrounding wall.
+* [fire](https://backspaces.github.io/as-app3d/models/?fire) A Cellular Automata fire model.
+* [flock](https://backspaces.github.io/as-app3d/models/?flock) The classic [Boids](https://en.wikipedia.org/wiki/Boids) flocking model.
+* [linktravel](https://backspaces.github.io/as-app3d/models/?linktravel) Turtles traveling on "roads" that are links, randomly choosing the next road at intersections.
+* [wallfollower](https://backspaces.github.io/as-app3d/models/?wallfollower) Turtles traversing obstacles via left/right hand rule.
+ 
 ## License
 
 Copyright Owen Densmore, RedfishGroup LLC, 2012-2018<br>
