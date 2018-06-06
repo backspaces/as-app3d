@@ -3689,6 +3689,9 @@ class SpriteSheet {
     // If src is function or name of path below, colors can be css
     // or Color module's Color object.
     newSprite(src, color, strokeColor) {
+        const isImage = util.isImageable(src);
+        if (isImage && !color) color = 'red';
+
         // Normalize color names to Color.color objects
         if (color) color = Color.toColor(color);
         if (strokeColor) strokeColor = Color.toColor(strokeColor);
@@ -3699,7 +3702,7 @@ class SpriteSheet {
         if (this.sprites[name]) return this.sprites[name]
 
         // Make a new sprite.
-        const sprite = util.isImageable(src)
+        const sprite = isImage
             ? this.addImage(src)
             : this.addDrawing(src, color, strokeColor);
         Object.assign(sprite, { src, color, strokeColor });
@@ -3739,9 +3742,9 @@ class SpriteSheet {
             // ditto for draw function or name of function in paths obj below
             name = src.name || src;
             if (!name.endsWith('2')) strokeColor = null;
-            name = `${name}${fillColor.css}${
-                strokeColor ? strokeColor.css : ''
-            }`;
+            const fillName = fillColor.css;
+            const strokeName = strokeColor ? strokeColor.css : '';
+            name = `${name}${fillName}${strokeName}`;
         }
         return name
     }
@@ -3770,6 +3773,10 @@ class SpriteSheet {
         return this.addImage(img) // return sprite
     }
 
+    // Return random sprite from sheet
+    oneOf () {
+        return util.oneValOf(this.sprites)
+    }
     // Resize ctx if too small for next row/col
     checkSheetSize() {
         if (this.nextRow === this.rows) {
