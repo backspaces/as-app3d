@@ -55,7 +55,7 @@ class Model extends CoreModel {
         this.colorMap = ColorMap.Basic16
 
         // View setup.
-        this.spriteSheet = new SpriteSheet()
+        this.spriteSheet = new SpriteSheet(rendererOptions.spriteSize)
         // Initialize view
         this.view = new rendererOptions.Renderer(this, rendererOptions)
         // Initialize meshes.

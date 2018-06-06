@@ -20,6 +20,7 @@ class ThreeView {
             useAxes: useThreeHelpers, // show x,y,z axes
             useGrid: useThreeHelpers, // show x,y plane
             useControls: useThreeHelpers, // navigation. REMIND: control name?
+            spriteSize: 64,
             // useStats: useUIHelpers, // show fps widget
             // useGUI: useUIHelpers, // activate dat.gui UI
             patches: {

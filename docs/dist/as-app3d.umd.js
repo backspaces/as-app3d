@@ -4377,6 +4377,7 @@ class ThreeView {
             useAxes: useThreeHelpers, // show x,y,z axes
             useGrid: useThreeHelpers, // show x,y plane
             useControls: useThreeHelpers, // navigation. REMIND: control name?
+            spriteSize: 64,
             // useStats: useUIHelpers, // show fps widget
             // useGUI: useUIHelpers, // activate dat.gui UI
             patches: {
@@ -4613,7 +4614,7 @@ class Model$1 extends Model {
         this.colorMap = ColorMap.Basic16;
 
         // View setup.
-        this.spriteSheet = new SpriteSheet();
+        this.spriteSheet = new SpriteSheet(rendererOptions.spriteSize);
         // Initialize view
         this.view = new rendererOptions.Renderer(this, rendererOptions);
         // Initialize meshes.
