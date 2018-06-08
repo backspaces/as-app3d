@@ -76,19 +76,17 @@ const turtlesOptionName = util.oneKeyOf(optionSet.turtles)
 const turtlesOption = optionSet.turtles[turtlesOptionName]
 
 // Print the options:
-console.log('linksOption', linksOptionName, util.objectToString1(linksOption))
+console.log('\nOptions: (no color = random colors)')
 console.log('TurtleOption', turtlesOptionName, util.objectToString1(turtlesOption))
+console.log('LinksOption', linksOptionName, util.objectToString1(linksOption))
+console.log('Warnings are fine. Mainly fixed color/shape amongst the 6 options.')
+console.log('')
 
 // Build a "hello world" random-walker model with patches, turtles, and links.
 class OptionsModel extends Model {
   setup () {
     this.turtles.own('speed')
     this.turtles.setDefault('atEdge', 'bounce')
-    // Test setting defaults. Monochrome will warn.
-    this.turtles.setDefault('color', 'red')
-    this.turtles.setDefault('color', 'blue')
-    this.links.setDefault('color', 'red')
-    this.links.setDefault('color', 'yellow')
 
     // Color the patches.
     this.patches.ask(p => {
@@ -96,19 +94,15 @@ class OptionsModel extends Model {
     })
 
     // Create turtles and set properties.
-    // Should warn if "illegal" for current options
     this.turtles.create(1000, (t) => {
       t.size = 0.5 // half a patch in size
       t.speed = util.randomFloat2(0.01, 0.05) // 0.5 + Math.random()
     })
 
-    // Create links. Warn if issues.
+    // Create links.
     util.repeat(100, (i, a) => {
       const turtles = this.turtles.nOf(2)
       this.links.create(turtles[0], turtles[1])
-      // this.links.create(turtles[0], turtles[1], (link) => {
-      //   link.color = this.links.randomColor()
-      // })
     })
   }
   step () {
