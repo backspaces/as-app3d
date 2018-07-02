@@ -18,6 +18,7 @@ import ColorMap from './ColorMap.js'
 import Link from './Link.js'
 import Links from './Links.js'
 import Model from './Model.js'
+import Mouse from './Mouse.js'
 import Patch from './Patch.js'
 import Patches from './Patches.js'
 import SpriteSheet from './SpriteSheet.js'
@@ -36,6 +37,7 @@ export {
     Link,
     Links,
     Model,
+    Mouse,
     Patch,
     Patches,
     RGBDataSet,

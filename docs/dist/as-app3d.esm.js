@@ -745,17 +745,29 @@ class AgentArray extends Array {
     // Call fcn(agent, index, array) for each agent in AgentArray.
     // Return the AgentArray for chaining.
     // Note: 5x+ faster than this.forEach(fcn) !!
-    for(fcn) {
-        for (let i = 0, len = this.length; i < len; i++) {
-            fcn(this[i], i, this);
-        }
-        return this
-    }
-    // As above with very simple allowance for array mutation
-    // A safer immutable version: array.clone().for/ask()
+    // each(fcn) {
+    //     for (let i = 0, len = this.length; i < len; i++) {
+    //         fcn(this[i], i, this)
+    //     }
+    //     return this
+    // }
+
+    // Call fcn(agent, index, array) for each item in AgentArray.
+    // Return the AgentArray for chaining.
+    // Note: 5x+ faster than this.forEach(fcn) !!
+    // Warns on array mutation (length change)
     ask(fcn) {
+        const length = this.length;
         for (let i = 0; i < this.length; i++) {
             fcn(this[i], i, this);
+            if (length != this.length) {
+                const name = this.name || this.constructor.name;
+                const direction =
+                    this.length < length ? 'decreasing' : 'increasing';
+                util.warn(
+                    `AgentArray.ask array mutation: ${name}: ${direction}`
+                );
+            }
         }
         return this
     }
@@ -1190,6 +1202,57 @@ class AgentSet extends AgentArray {
 
         // Give `a` my defaults/statics
         return Object.setPrototypeOf(a, this.agentProto)
+    }
+
+    // Call fcn(agent, index, array) for each item in AgentArray.
+    // Return the AgentArray for chaining.
+    // Note: 5x+ faster than this.forEach(fcn) !!
+    // Manages immutability reasonably well.
+    askSet(fcn) {
+        if (this.name === 'patches') super.ask(fcn); // Patches are static
+        if (this.isBaseSet()) this.baseSetAsk(fcn);
+        if (this.isBreedSet()) this.cloneAsk(fcn);
+    }
+
+    // An ask function for mutable baseSets.
+    // BaseSets can only add past the end of the array.
+    // This allows us to manage mutations by allowing length change,
+    // and managing deletions only within the original length.
+    baseSetAsk(fcn) {
+        if (this.length === 0) return this
+        // const length = this.length
+        const lastID = this.last().id;
+
+        // Added obj's have id > lastID. Just check for deletions.
+        // There Be Dragons:
+        // - AgentSet can become length 0 if all deleted
+        // - While loop tricky:
+        //   - i can beocme negative w/in while loop:
+        //   - i can beocme bigger than current AgentSet:
+        //   - Guard w/ i<len & i>=0
+        for (let i = 0; i < this.length && this[i].id <= lastID; i++) {
+            const id = this[i].id;
+            fcn(this[i], i, this);
+            while (i < this.length && i >= 0 && this[i].id > id) {
+                i--;
+            }
+        }
+    }
+
+    // For breeds, mutations can occur in many ways.
+    // This solves this by cloning the initial array and
+    // managing agents that have died or changed breed.
+    // In other words, we can be concerned only with mutations
+    // of the agents themselves.
+    cloneAsk(fcn) {
+        const clone = this.clone();
+        for (let i = 0; i < clone.length; i++) {
+            const obj = clone[i];
+            if (obj.breed == this && obj.id > 0) {
+                fcn(obj, i, clone);
+            }
+        }
+        return this
     }
 }
 
@@ -1654,10 +1717,10 @@ class DataSet {
 // Flyweight object creation, see Patch/Patches.
 // https://medium.com/dailyjs/two-headed-es6-classes-fe369c50b24
 
-// The core default variables needed by a Link.
-// Use links.setDefault(name, val) to change
-// Modelers add additional "own variables" as needed.
 class Link {
+    // The core default variables needed by a Link.
+    // Use links.setDefault(name, val) to change
+    // Modelers add additional "own variables" as needed.
     static defaultVariables() {
         // Core variables for patches. Not 'own' variables.
         return {
@@ -1681,7 +1744,8 @@ class Link {
         this.agentSet.removeAgent(this);
         util.removeArrayItem(this.end0.links, this);
         util.removeArrayItem(this.end1.links, this);
-        this.id = -this.id;
+        // Set id to -1, indicates that I've died.
+        this.id = -1;
     }
 
     bothEnds() {
@@ -2271,15 +2335,17 @@ class Turtle {
     }
     die() {
         this.agentSet.removeAgent(this); // remove me from my baseSet and breed
+        // Remove my links if any exist.
+        // Careful: don't promote links
         if (this.hasOwnProperty('links')) {
-            // don't promote links
             while (this.links.length > 0) this.links[0].die();
         }
+        // Remove me from patch.turtles cache if patch.turtles array exists
         if (this.patch.turtles != null) {
             util.removeArrayItem(this.patch.turtles, this);
         }
-        // util.removeItem(this.patch.turtles, this)
-        this.id = -this.id;
+        // Set id to -1, indicates that I've died.
+        this.id = -1;
     }
 
     // Factory: create num new turtles at this turtle's location. The optional init
@@ -4729,6 +4795,127 @@ class Model$1 extends Model {
     // have used this module's Patch, Patches, ...
 }
 
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS104: Avoid inline assignments
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// A NetLogo-like mouse handler. See Mouse for a sophisticated delegation mouse
+//
+// Event locations, clientX/Y, screenX/Y, offsetX/Y, pageX/Y can be confusing.
+// See: [this gist](https://gist.github.com/branneman/fc66785c082099298955)
+// and [this post](http://www.jacklmoore.com/notes/mouse-position/) and others.
+class Mouse {
+    // Create and start mouse obj, args: a model, and a callback method.
+    constructor(element, world, callback = null) {
+        // this.handleMouseDown = this.handleMouseDown.bind(this)
+        // this.handleMouseUp = this.handleMouseUp.bind(this)
+        // this.handleMouseMove = this.handleMouseMove.bind(this)
+        // this.model = model
+        // [this.minXcor, this.maxYcor] = model.world
+        // this.callback = callback
+        // this.div = this.model.div
+
+        Object.assign(this, { element, world, callback });
+
+        // instance event handlers: arrow fcns to insure "this" is us.
+        this.mouseDown = e => this.handleMouseDown(e);
+        this.mouseUp = e => this.handleMouseUp(e);
+        this.mouseMove = e => this.handleMouseMove(e);
+
+        // this.start()
+    }
+
+    // Start/stop the mouseListeners.  Note that NetLogo's model is to have
+    // mouse move events always on, rather than starting/stopping them
+    // on mouse down/up.  We may want do make that optional, using the
+    // more standard down/up enabling move events.
+    resetParams() {
+        this.xCor = this.yCor = NaN;
+        this.moved = this.down = false;
+    }
+    start() {
+        // Note: multiple calls safe
+        this.element.addEventListener('mousedown', this.mouseDown);
+        document.body.addEventListener('mouseup', this.mouseUp);
+        this.element.addEventListener('mousemove', this.mouseMove);
+        this.resetParams();
+        return this // chaining
+    }
+    stop() {
+        // Note: multiple calls safe
+        this.element.removeEventListener('mousedown', this.mouseDown);
+        document.body.removeEventListener('mouseup', this.mouseUp);
+        this.element.removeEventListener('mousemove', this.mouseMove);
+        this.resetParams();
+        return this // chaining
+    }
+
+    // Handlers for eventListeners
+    generalHandler(e, down, moved) {
+        this.down = down;
+        this.moved = moved;
+        this.setXY(e);
+        if (this.callback != null) {
+            this.callback(e);
+        }
+    }
+    handleMouseDown(e) {
+        this.action = 'down';
+        this.generalHandler(e, true, false);
+    }
+    handleMouseUp(e) {
+        this.action = 'up';
+        this.generalHandler(e, false, false);
+    }
+    handleMouseMove(e) {
+        this.action = this.down ? 'drag' : 'move';
+        this.generalHandler(e, this.down, true);
+    }
+
+    // set x, y to be event location in patch coordinates.
+    setXY(e) {
+        const rect = this.element.getBoundingClientRect();
+        const pixX = e.clientX - rect.left;
+        const pixY = e.clientY - rect.top;
+        // return this.pixelXYtoPatchXY(pixX, pixY)
+        // const xy = this.pixelXYtoPatchXY(pixX, pixY)
+        // [this.xCor, this.yCor] = xy // this.pixelXYtoPatchXY(pixX, pixY)
+        Object.assign(this, this.pixelXYtoPatchXY(pixX, pixY));
+    }
+
+    patchSize() {
+        const { numX, numY } = this.world;
+        const { clientWidth: width, clientHeight: height } = this.element;
+        const xSize = width / numX;
+        const ySize = height / numY;
+        if (xSize !== ySize) {
+            throw Error(
+                `Mouse patchSize: xSize, ySize differ ${xSize}, ${ySize}`
+            )
+        }
+        return xSize
+    }
+    // Convert pixel location (top/left offset i.e. mouse)
+    // to patch coords(float)
+    pixelXYtoPatchXY(x, y) {
+        const patchSize = this.patchSize();
+        const { minXcor, maxYcor } = this.world;
+        return {
+            x: minXcor + x / patchSize,
+            y: maxYcor - y / patchSize,
+        }
+    }
+    // Convert patch coords (float) to pixel location
+    // (top / left offset i.e.mouse)
+    // patchXYtoPixelXY(x, y) {
+    //     return [(x - this.minXcor) * this.size, (this.maxYcor - y) * this.size]
+    // }
+}
+
 // import AgentArray      from '../node_modules/as-core/src/AgentArray.js'
 // import AgentSet        from '../node_modules/as-core/src/AgentSet.js'
 // import DataSet         from '../node_modules/as-core/src/DataSet.js'
@@ -4736,4 +4923,4 @@ class Model$1 extends Model {
 // import World           from '../node_modules/as-core/src/World.js'
 // import util            from '../node_modules/as-core/src/util.js'
 
-export { AgentArray, AgentSet, Animator, Color, ColorMap, DataSet, Link$1 as Link, Links$1 as Links, Model$1 as Model, Patch$1 as Patch, Patches$1 as Patches, RGBDataSet, SpriteSheet, ThreeView, ThreeMeshes, Turtle$1 as Turtle, Turtles$1 as Turtles, World, util };
+export { AgentArray, AgentSet, Animator, Color, ColorMap, DataSet, Link$1 as Link, Links$1 as Links, Model$1 as Model, Mouse, Patch$1 as Patch, Patches$1 as Patches, RGBDataSet, SpriteSheet, ThreeView, ThreeMeshes, Turtle$1 as Turtle, Turtles$1 as Turtles, World, util };

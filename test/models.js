@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer')
 const shell = require('shelljs')
 
 const models = shell
-    .ls('models/*.js')
+    .ls('models/[a-z]*.js') // Avoid FooModel.js, just foo.js
     .sed(/^models./, '')
     .sed(/.js$/, '')
     .replace(/\n$/, '')
