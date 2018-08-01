@@ -11,11 +11,12 @@ class FlockModel extends Model {
         this.maxTurn = util.radians(maxTurnDegrees)
     }
     setup() {
-        // console.log('firebase', firebase)
+        // this.turtles.own('vision')
+
         this.turtles.setDefault('atEdge', 'wrap')
-        this.turtles.setDefault('z', 0.6)
+        this.turtles.setDefault('z', 0.1)
         this.turtles.setDefault('size', 1)
-        this.turtles.setDefault('speed', 0.1)
+        this.turtles.setDefault('speed', 0.25)
 
         const cmap = ColorMap.grayColorMap(0, 100)
         this.patches.ask(p => {
@@ -27,7 +28,7 @@ class FlockModel extends Model {
         this.setVision(3)
         this.minSeparation = 0.75
         // this.anim.setRate(30)
-        this.population = 200 // 300 // 1e4 this.patches.length
+        this.population = 1000 // 300 // 1e4 this.patches.length
 
         util.repeat(this.population, () => {
             this.patches.oneOf().sprout()
@@ -44,10 +45,7 @@ class FlockModel extends Model {
         // flockmates = this.turtles.inRadius(a, this.vision).other(a)
         const flockmates = this.turtles.inRadius(a, this.vision, false)
         // flockmates = a.inRadius(this.turtles, this.vision, false)
-        if (this.inBounds(a)) {
-            const theta = a.towards({ x: 0, y: 0 })
-            this.turnTowards(a, theta, Math.PI / 10)
-        } else if (flockmates.length !== 0) {
+        if (flockmates.length !== 0) {
             // REMIND: distanceSq or manhattan distance
             const nearest = flockmates.minOneOf(f => f.distance(a))
             if (a.distance(nearest) < this.minSeparation) {
@@ -63,23 +61,16 @@ class FlockModel extends Model {
         const theta = nearest.towards(a)
         this.turnTowards(a, theta)
     }
-    inBounds(a) {
-        return (
-            a.x < this.world.minX + 1 ||
-            a.x > this.world.maxX - 1 ||
-            a.y < this.world.minY + 1 ||
-            a.y > this.world.maxY - 1
-        )
-    }
     align(a, flockmates) {
         this.turnTowards(a, this.averageHeading(flockmates))
     }
     cohere(a, flockmates) {
         this.turnTowards(a, this.averageHeadingTowards(a, flockmates))
     }
-    turnTowards(a, theta, max = this.maxTurn) {
+
+    turnTowards(a, theta) {
         let turn = util.subtractRadians(theta, a.theta) // angle from h to a
-        turn = util.clamp(turn, -max, max) // limit the turn
+        turn = util.clamp(turn, -this.maxTurn, this.maxTurn) // limit the turn
         a.rotate(turn)
     }
     averageHeading(flockmates) {
@@ -108,7 +99,8 @@ class FlockModel extends Model {
     }
 }
 
-const model = new FlockModel()
+const worldOptions = FlockModel.defaultWorld(32, 16)
+const model = new FlockModel(document.body, worldOptions)
 model.setup()
 model.start()
 

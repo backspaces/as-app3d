@@ -9,6 +9,7 @@
 // A NetLogo-like mouse handler. See Mouse for a sophisticated delegation mouse
 //
 // Event locations, clientX/Y, screenX/Y, offsetX/Y, pageX/Y can be confusing.
+// https://stackoverflow.com/questions/21064101/understanding-offsetwidth-clientwidth-scrollwidth-and-height-respectively
 // See: [this gist](https://gist.github.com/branneman/fc66785c082099298955)
 // and [this post](http://www.jacklmoore.com/notes/mouse-position/) and others.
 export default class Mouse {

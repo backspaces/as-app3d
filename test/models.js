@@ -35,6 +35,7 @@ models.forEach(async model => {
                 `--window-size=${width},${height}`,
             ],
             headless: false,
+            // devtools: true,
         })
         // console.log('browser')
         const page = await browser.newPage()
