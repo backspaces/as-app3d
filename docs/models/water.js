@@ -26,7 +26,6 @@ class WaterModel extends Model {
 
     createWave(p) {
         p.zpos = this.strength
-        // console.log(this.anim.ticks)
     }
     colorPatches() {
         const maxWater = 10

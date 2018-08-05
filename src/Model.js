@@ -99,6 +99,7 @@ class Model extends CoreModel {
     // Can't use core's because imported Patches etc, are view versions
     // thus need to be in this module's scope. A bit odd.
     resetModel() {
+        this.ticks = 0
         this.world = new World(this.worldOptions)
         // Base AgentSets setup here. Breeds handled by setup
         this.initAgentSet('patches', Patches, Patch)

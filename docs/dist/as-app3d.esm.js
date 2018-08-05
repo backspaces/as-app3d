@@ -577,18 +577,18 @@ const util = {
     // steps < 0: forever (default), steps === 0 is no-op
     // Returns a promise for when done. If forever, no need to use it.
     async timeoutLoop(fcn, steps = -1, ms = 0) {
-        while (steps-- !== 0) {
-            // Note decr occurs *after* comparison
-            fcn();
+        let i = 0;
+        while (i++ !== steps) {
+            fcn(i);
             await this.timeoutPromise(ms);
         }
     },
 
     yieldLoop(fcn, steps = -1) {
+        let i = 0;
         function* gen() {
-            while (steps-- !== 0) {
-                // Note decr occurs *after* comparison
-                yield fcn();
+            while (i++ !== steps) {
+                yield fcn(i);
             }
         }
         const iterator = gen();
@@ -600,9 +600,9 @@ const util = {
         return new Promise(resolve => requestAnimationFrame(resolve))
     },
     async rafLoop(fcn, steps = -1) {
-        while (steps-- !== 0) {
-            // Note decr occurs *after* comparison
-            fcn();
+        let i = 0;
+        while (i++ !== steps) {
+            fcn(i);
             await this.rafPromise();
         }
     },
@@ -2586,6 +2586,7 @@ class Model {
         this[name] = agentset;
     }
     resetModel() {
+        this.ticks = 0;
         this.world = new World(this.worldOptions);
         // Base AgentSets setup here. Breeds handled by setup
         this.initAgentSet('patches', Patches, Patch);
@@ -2594,6 +2595,9 @@ class Model {
     }
     reset() {
         this.resetModel();
+    }
+    tick() {
+        this.ticks++;
     }
 
     // ### User Model Creation
@@ -2776,6 +2780,7 @@ class Animator {
     }
     // Two handlers used by animation loop
     step() {
+        this.model.tick();
         this.ticks++;
         this.model.step();
     }
@@ -2799,11 +2804,11 @@ class Animator {
     // Get ticks/draws per second. They will differ if multiStep.
     ticksPerSec() {
         const dt = this.ticks - this.startTick;
-        return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms()) // avoid divide by 0
+        return dt === 0 ? 0 : Math.round((dt * 1000) / this.ms()) // avoid divide by 0
     }
     drawsPerSec() {
         const dt = this.draws - this.startDraw;
-        return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms())
+        return dt === 0 ? 0 : Math.round((dt * 1000) / this.ms())
     }
     get fps() {
         return Math.max(this.drawsPerSec(), this.ticksPerSec())
@@ -4761,6 +4766,7 @@ class Model$1 extends Model {
     // Can't use core's because imported Patches etc, are view versions
     // thus need to be in this module's scope. A bit odd.
     resetModel() {
+        this.ticks = 0;
         this.world = new World(this.worldOptions);
         // Base AgentSets setup here. Breeds handled by setup
         this.initAgentSet('patches', Patches$1, Patch$1);
@@ -4806,6 +4812,10 @@ class Model$1 extends Model {
         this.stop();
         this.anim.once();
     } // stop is no-op if already stopped
+
+    // get ticks() {
+    //     return this.anim.ticks
+    // }
 
     draw(force = this.anim.stopped || this.anim.draws === 1) {
         // const {scene, camera} = this.view

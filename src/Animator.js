@@ -48,6 +48,7 @@ class Animator {
     }
     // Two handlers used by animation loop
     step() {
+        this.model.tick()
         this.ticks++
         this.model.step()
     }
@@ -71,11 +72,11 @@ class Animator {
     // Get ticks/draws per second. They will differ if multiStep.
     ticksPerSec() {
         const dt = this.ticks - this.startTick
-        return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms()) // avoid divide by 0
+        return dt === 0 ? 0 : Math.round((dt * 1000) / this.ms()) // avoid divide by 0
     }
     drawsPerSec() {
         const dt = this.draws - this.startDraw
-        return dt === 0 ? 0 : Math.round(dt * 1000 / this.ms())
+        return dt === 0 ? 0 : Math.round((dt * 1000) / this.ms())
     }
     get fps() {
         return Math.max(this.drawsPerSec(), this.ticksPerSec())
