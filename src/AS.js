@@ -15,6 +15,7 @@ import {
 import Animator from './Animator.js'
 import Color from './Color.js'
 import ColorMap from './ColorMap.js'
+import Controller from './Controller.js'
 import Link from './Link.js'
 import Links from './Links.js'
 import Model from './Model.js'
@@ -33,6 +34,7 @@ export {
     Animator,
     Color,
     ColorMap,
+    Controller,
     DataSet,
     Link,
     Links,

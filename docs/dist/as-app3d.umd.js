@@ -1,10 +1,11 @@
 /* eslint-disable */
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('../dist/three.wrapper.js'), require('../dist/OrbitControls.wrapper.js')) :
-	typeof define === 'function' && define.amd ? define(['exports', '../dist/three.wrapper.js', '../dist/OrbitControls.wrapper.js'], factory) :
-	(factory((global.ASapp3d = {}),global.THREE));
-}(this, (function (exports,THREE) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('https://unpkg.com/dat.gui/build/dat.gui.module.js'), require('../dist/three.wrapper.js'), require('../dist/OrbitControls.wrapper.js')) :
+	typeof define === 'function' && define.amd ? define(['exports', 'https://unpkg.com/dat.gui/build/dat.gui.module.js', '../dist/three.wrapper.js', '../dist/OrbitControls.wrapper.js'], factory) :
+	(factory((global.ASapp3d = {}),global.dat,global.THREE));
+}(this, (function (exports,dat,THREE) { 'use strict';
 
+dat = dat && dat.hasOwnProperty('default') ? dat['default'] : dat;
 THREE = THREE && THREE.hasOwnProperty('default') ? THREE['default'] : THREE;
 
 /* eslint-disable */
@@ -2754,7 +2755,7 @@ class Animator {
     }
     // Adjust animator. Call before model.start()
     // in setup() to change default settings
-    setRate(rate, multiStep = false) {
+    setRate(rate, multiStep = this.multistep) {
         Object.assign(this, { rate, multiStep });
         this.resetTimes();
     }
@@ -3446,6 +3447,88 @@ const ColorMap = {
         )
     },
 };
+
+class Controller {
+    constructor(model, controlList) {
+        this.model = model;
+        this.controlList = controlList;
+        this.gui = new dat.GUI();
+        util.forEach(this.controlList, (obj, key) => {
+            this.addControl(key, obj);
+            console.log(key, obj);
+            this.addUI(this.model, key, obj);
+        });
+    }
+    addControl(name, options) {
+        let functionType = null;
+        const extentType = util.typeOf(options.extent);
+        const valueType = util.typeOf(options.value);
+
+        if (valueType !== 'undefined') this.model[name] = options.value;
+
+        if (extentType === 'undefined') {
+            if (valueType === 'boolean') functionType = 'toggle';
+            if (valueType === 'string' || valueType === 'number') {
+                functionType = options.cmd === 'listen' ? 'monitor' : 'input';
+            }
+            // if (valueType === 'number') functionType = 'numberFcn'
+            if (valueType === 'undefined') functionType = 'button';
+        } else if (extentType === 'array') {
+            const itemType = util.typeOf(options.extent[0]);
+            if (itemType === 'number') functionType = 'slider'; // REMIND: step default to 1?
+            if (itemType === 'string') functionType = 'chooser';
+        } else if (extentType === 'object') {
+            functionType = 'chooser'; // name/number pairs
+        }
+
+        if (!functionType) throw Error('Controls.addControl, no functionType')
+        options.type = functionType;
+    }
+    addUI(target, name, options) {
+        const { extent, type, cmd } = options;
+        let control;
+
+        switch (type) {
+        case 'slider':
+            const [min, max, step = 1] = extent;
+            control = this.gui.add(target, name, min, max).step(step);
+            break
+
+        case 'chooser':
+            control = this.gui.add(target, name, extent);
+            break
+
+        case 'button':
+            control = this.gui.add(target, name);
+            break
+
+        case 'toggle':
+            control = this.gui.add(target, name);
+            break
+
+        case 'input':
+        case 'monitor':
+            control = this.gui.add(target, name);
+            break
+
+        default:
+            throw Error(`Controller.addUI: bad type: ${type}`)
+        }
+
+        if (cmd) {
+            if (cmd === 'listen') control.listen();
+            else control.onChange(cmd);
+        }
+        options.control = control;
+    }
+}
+
+
+
+/*
+    NetLogoUIs.pdf
+    https://ccl.northwestern.edu/netlogo/docs/interfacetab.html#working-with-interface-elements
+*/
 
 // import util from '../node_modules/as-core/src/util.js'
 // import CoreLink from '../node_modules/as-core/src/Link.js'
@@ -4791,6 +4874,11 @@ class Model$1 extends Model {
         this.resetModel();
         this.resetView();
     }
+    restart() {
+        this.reset();
+        this.setup();
+        this.start();
+    }
 
     randomColor() {
         return this.colorMap.randomColor()
@@ -4817,10 +4905,6 @@ class Model$1 extends Model {
         this.stop();
         this.anim.once();
     } // stop is no-op if already stopped
-
-    // get ticks() {
-    //     return this.anim.ticks
-    // }
 
     draw(force = this.anim.stopped || this.anim.draws === 1) {
         // const {scene, camera} = this.view
@@ -4986,6 +5070,7 @@ exports.AgentSet = AgentSet;
 exports.Animator = Animator;
 exports.Color = Color;
 exports.ColorMap = ColorMap;
+exports.Controller = Controller;
 exports.DataSet = DataSet;
 exports.Link = Link$1;
 exports.Links = Links$1;

@@ -119,6 +119,11 @@ class Model extends CoreModel {
         this.resetModel()
         this.resetView()
     }
+    restart() {
+        this.reset()
+        this.setup()
+        this.start()
+    }
 
     randomColor() {
         return this.colorMap.randomColor()
