@@ -1,0 +1,32 @@
+<html>
+
+<head>
+    <title>Play</title>
+</head>
+
+<body>
+    <script type="module">
+        import {
+            util, Controller, Model
+        } from 'https://backspaces.github.io/as-app3d/dist/as-app3d.esm.js'
+        const controls = {
+            myParam: {
+                value: 20,
+                extent: [0, 100]
+            }
+        }
+        class MyModel extends Model {
+            setup() {
+            }
+            step() {
+            }
+        }
+        const model = new MyModel()
+        const controller = new Controller(model, controls)
+        model.setup()
+        model.start()
+        window.model = model // debugging in console
+    </script>
+</body>
+
+</html>
