@@ -1,4 +1,4 @@
-import {Mouse,  util } from '../dist/as-app3d.esm.js'
+import {Mouse,  util } from '../dist/as-app3d.esm.min.js'
 import HelloModel from './HelloModel.js'
 
 const model = new HelloModel()

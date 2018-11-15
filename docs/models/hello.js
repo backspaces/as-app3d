@@ -1,4 +1,4 @@
-import { util } from '../dist/as-app3d.esm.js'
+import { util } from '../dist/as-app3d.esm.min.js'
 import HelloModel from './HelloModel.js'
 
 const model = new HelloModel()

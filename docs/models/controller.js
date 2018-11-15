@@ -1,4 +1,4 @@
-import {ColorMap, Model, Controller,  util } from '../dist/as-app3d.esm.js'
+import {ColorMap, Model, Controller,  util } from '../dist/as-app3d.esm.min.js'
 
 const controls = {
     fps: {

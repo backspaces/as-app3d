@@ -1,4 +1,4 @@
-import {ColorMap, Model,  AgentArray, RGBDataSet, util } from '../dist/as-app3d.esm.js'
+import {ColorMap, Model,  AgentArray, RGBDataSet, util } from '../dist/as-app3d.esm.min.js'
 
 util.toWindow({ AgentArray, ColorMap, Model, RGBDataSet, util })
 

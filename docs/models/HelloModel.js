@@ -1,4 +1,4 @@
-import {ColorMap, Model,  util } from '../dist/as-app3d.esm.js'
+import {ColorMap, Model,  util } from '../dist/as-app3d.esm.min.js'
 
 export default class HelloModel extends Model {
     // Inherit default constructor when constructor not provided.

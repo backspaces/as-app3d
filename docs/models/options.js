@@ -1,4 +1,4 @@
-import {ColorMap, Model, util} from '../dist/as-app3d.esm.js'
+import {ColorMap, Model, util} from '../dist/as-app3d.esm.min.js'
 // This model demonstrates use of Three.js meshes.
 // Generally the default QuadSprites needs no setup.
 // This is for users wanting to use Points and monochrome meshes.

@@ -1,4 +1,4 @@
-import {Model,  util } from '../dist/as-app3d.esm.js'
+import {Model,  util } from '../dist/as-app3d.esm.min.js'
 
 class TSPModel extends Model {
     // Use default ctor
